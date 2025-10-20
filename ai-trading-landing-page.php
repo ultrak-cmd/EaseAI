@@ -1,3 +1,65 @@
+<?php
+$logFilePath = __DIR__ . '/tradeease-demo-requests.log';
+$submissionSuccess = false;
+$errorMessage = '';
+$formData = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $formData = [
+        'firstName'   => trim((string)($_POST['firstName'] ?? '')),
+        'lastName'    => trim((string)($_POST['lastName'] ?? '')),
+        'email'       => trim((string)($_POST['email'] ?? '')),
+        'phone'       => trim((string)($_POST['phone'] ?? '')),
+        'country'     => trim((string)($_POST['country'] ?? '')),
+        'investment'  => trim((string)($_POST['investment'] ?? '')),
+        'experience'  => trim((string)($_POST['experience'] ?? '')),
+        'goals'       => trim((string)($_POST['goals'] ?? '')),
+        'terms'       => isset($_POST['terms']) ? 'Yes' : 'No',
+        'marketing'   => isset($_POST['marketing']) ? 'Yes' : 'No',
+        'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN',
+        'user_agent'  => $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN',
+    ];
+
+    $requiredFields = ['firstName', 'lastName', 'email', 'phone', 'country', 'investment', 'experience'];
+    $missingFields = array_filter($requiredFields, function ($field) use ($formData) {
+        return $formData[$field] === '';
+    });
+
+    if (!empty($missingFields)) {
+        $errorMessage = 'Please fill in all required fields before submitting the form.';
+    } elseif (!filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
+        $errorMessage = 'Please provide a valid business email address.';
+    } elseif ($formData['terms'] !== 'Yes') {
+        $errorMessage = 'You must agree to the Terms & Conditions and Privacy Policy to continue.';
+    } else {
+        $timestamp = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s \U\T\C');
+        $logEntry = "==============================\n" .
+                    "Submission Time: {$timestamp}\n" .
+                    "First Name: {$formData['firstName']}\n" .
+                    "Last Name: {$formData['lastName']}\n" .
+                    "Email: {$formData['email']}\n" .
+                    "Phone: {$formData['phone']}\n" .
+                    "Country: {$formData['country']}\n" .
+                    "Investment Range: {$formData['investment']}\n" .
+                    "Experience: {$formData['experience']}\n" .
+                    "Goals: {$formData['goals']}\n" .
+                    "Marketing Opt-In: {$formData['marketing']}\n" .
+                    "Agreed to Terms: {$formData['terms']}\n" .
+                    "IP Address: {$formData['ip_address']}\n" .
+                    "User Agent: {$formData['user_agent']}\n" .
+                    "==============================\n\n";
+
+        $writeResult = @file_put_contents($logFilePath, $logEntry, FILE_APPEND | LOCK_EX);
+
+        if ($writeResult === false) {
+            $errorMessage = 'We were unable to store your request at this time. Please try again later.';
+        } else {
+            $submissionSuccess = true;
+            $formData = [];
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -527,6 +589,34 @@
             color: var(--gray);
         }
 
+        .form-alert {
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            border: 1px solid transparent;
+        }
+
+        .form-alert strong {
+            font-weight: 700;
+        }
+
+        .form-alert.success {
+            background: rgba(0, 168, 107, 0.12);
+            border-color: rgba(0, 168, 107, 0.4);
+            color: #0F5132;
+        }
+
+        .form-alert.error {
+            background: rgba(231, 76, 60, 0.12);
+            border-color: rgba(231, 76, 60, 0.4);
+            color: #7A271A;
+        }
+
         .demo-form {
             display: flex;
             flex-direction: column;
@@ -661,24 +751,6 @@
             background: var(--gray-pale);
             padding: 0.4rem 0.85rem;
             border-radius: 999px;
-        }
-
-        .spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(15, 27, 60, 0.25);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .btn-submit.loading .spinner {
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         .section {
@@ -1711,26 +1783,36 @@
                         <p>See our platform in action with a personalized walkthrough</p>
                     </div>
 
-                    <form class="demo-form" onsubmit="handleFormSubmit(event)">
+                    <?php if ($submissionSuccess): ?>
+                        <div class="form-alert success" role="status">
+                            <strong>Thank you!</strong> Your demo request has been received. Our team will contact you within 24 hours to schedule your personalized walkthrough.
+                        </div>
+                    <?php elseif ($errorMessage): ?>
+                        <div class="form-alert error" role="alert">
+                            <strong>We're sorry.</strong> <?php echo htmlspecialchars($errorMessage); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form class="demo-form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="firstName">First Name *</label>
-                                <input type="text" id="firstName" name="firstName" required>
+                                <input type="text" id="firstName" name="firstName" value="<?php echo htmlspecialchars($formData['firstName'] ?? ''); ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="lastName">Last Name *</label>
-                                <input type="text" id="lastName" name="lastName" required>
+                                <input type="text" id="lastName" name="lastName" value="<?php echo htmlspecialchars($formData['lastName'] ?? ''); ?>" required>
                             </div>
                         </div>
 
                         <div class="form-group full-width">
                             <label for="email">Business Email *</label>
-                            <input type="email" id="email" name="email" required>
+                            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($formData['email'] ?? ''); ?>" required>
                         </div>
 
                         <div class="form-group full-width">
                             <label for="phone">Phone Number *</label>
-                            <input type="tel" id="phone" name="phone" required>
+                            <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($formData['phone'] ?? ''); ?>" required>
                         </div>
 
                         <div class="form-row">
@@ -1738,27 +1820,27 @@
                                 <label for="country">Country *</label>
                                 <select id="country" name="country" required>
                                     <option value="">Select Country</option>
-                                    <option value="UK">United Kingdom</option>
-                                    <option value="US">United States</option>
-                                    <option value="CA">Canada</option>
-                                    <option value="AU">Australia</option>
-                                    <option value="DE">Germany</option>
-                                    <option value="FR">France</option>
-                                    <option value="ES">Spain</option>
-                                    <option value="IT">Italy</option>
-                                    <option value="NL">Netherlands</option>
-                                    <option value="Other">Other</option>
+                                    <option value="UK" <?php echo (isset($formData['country']) && $formData['country'] === 'UK') ? 'selected' : ''; ?>>United Kingdom</option>
+                                    <option value="US" <?php echo (isset($formData['country']) && $formData['country'] === 'US') ? 'selected' : ''; ?>>United States</option>
+                                    <option value="CA" <?php echo (isset($formData['country']) && $formData['country'] === 'CA') ? 'selected' : ''; ?>>Canada</option>
+                                    <option value="AU" <?php echo (isset($formData['country']) && $formData['country'] === 'AU') ? 'selected' : ''; ?>>Australia</option>
+                                    <option value="DE" <?php echo (isset($formData['country']) && $formData['country'] === 'DE') ? 'selected' : ''; ?>>Germany</option>
+                                    <option value="FR" <?php echo (isset($formData['country']) && $formData['country'] === 'FR') ? 'selected' : ''; ?>>France</option>
+                                    <option value="ES" <?php echo (isset($formData['country']) && $formData['country'] === 'ES') ? 'selected' : ''; ?>>Spain</option>
+                                    <option value="IT" <?php echo (isset($formData['country']) && $formData['country'] === 'IT') ? 'selected' : ''; ?>>Italy</option>
+                                    <option value="NL" <?php echo (isset($formData['country']) && $formData['country'] === 'NL') ? 'selected' : ''; ?>>Netherlands</option>
+                                    <option value="Other" <?php echo (isset($formData['country']) && $formData['country'] === 'Other') ? 'selected' : ''; ?>>Other</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="investment">Investment Range *</label>
                                 <select id="investment" name="investment" required>
                                     <option value="">Select Amount</option>
-                                    <option value="250-500">£250 - £500</option>
-                                    <option value="500-1000">£500 - £1,000</option>
-                                    <option value="1000-5000">£1,000 - £5,000</option>
-                                    <option value="5000-10000">£5,000 - £10,000</option>
-                                    <option value="10000+">£10,000+</option>
+                                    <option value="250-500" <?php echo (isset($formData['investment']) && $formData['investment'] === '250-500') ? 'selected' : ''; ?>>£250 - £500</option>
+                                    <option value="500-1000" <?php echo (isset($formData['investment']) && $formData['investment'] === '500-1000') ? 'selected' : ''; ?>>£500 - £1,000</option>
+                                    <option value="1000-5000" <?php echo (isset($formData['investment']) && $formData['investment'] === '1000-5000') ? 'selected' : ''; ?>>£1,000 - £5,000</option>
+                                    <option value="5000-10000" <?php echo (isset($formData['investment']) && $formData['investment'] === '5000-10000') ? 'selected' : ''; ?>>£5,000 - £10,000</option>
+                                    <option value="10000+" <?php echo (isset($formData['investment']) && $formData['investment'] === '10000+') ? 'selected' : ''; ?>>£10,000+</option>
                                 </select>
                             </div>
                         </div>
@@ -1767,32 +1849,31 @@
                             <label for="experience">Trading Experience *</label>
                             <select id="experience" name="experience" required>
                                 <option value="">Select Experience Level</option>
-                                <option value="none">No Experience</option>
-                                <option value="beginner">Beginner (Less than 1 year)</option>
-                                <option value="intermediate">Intermediate (1-3 years)</option>
-                                <option value="advanced">Advanced (3-5 years)</option>
-                                <option value="expert">Expert (5+ years)</option>
+                                <option value="none" <?php echo (isset($formData['experience']) && $formData['experience'] === 'none') ? 'selected' : ''; ?>>No Experience</option>
+                                <option value="beginner" <?php echo (isset($formData['experience']) && $formData['experience'] === 'beginner') ? 'selected' : ''; ?>>Beginner (Less than 1 year)</option>
+                                <option value="intermediate" <?php echo (isset($formData['experience']) && $formData['experience'] === 'intermediate') ? 'selected' : ''; ?>>Intermediate (1-3 years)</option>
+                                <option value="advanced" <?php echo (isset($formData['experience']) && $formData['experience'] === 'advanced') ? 'selected' : ''; ?>>Advanced (3-5 years)</option>
+                                <option value="expert" <?php echo (isset($formData['experience']) && $formData['experience'] === 'expert') ? 'selected' : ''; ?>>Expert (5+ years)</option>
                             </select>
                         </div>
 
                         <div class="form-group full-width">
                             <label for="goals">Trading Goals (Optional)</label>
-                            <textarea id="goals" name="goals" placeholder="Tell us about your investment goals and what you hope to achieve..."></textarea>
+                            <textarea id="goals" name="goals" placeholder="Tell us about your investment goals and what you hope to achieve..." rows="3"><?php echo htmlspecialchars($formData['goals'] ?? ''); ?></textarea>
                         </div>
 
                         <div class="form-checkbox">
-                            <input type="checkbox" id="terms" name="terms" required>
+                            <input type="checkbox" id="terms" name="terms" <?php echo (isset($formData['terms']) && $formData['terms'] === 'Yes') ? 'checked' : ''; ?> required>
                             <label for="terms">I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></label>
                         </div>
 
                         <div class="form-checkbox">
-                            <input type="checkbox" id="marketing" name="marketing">
+                            <input type="checkbox" id="marketing" name="marketing" <?php echo (isset($formData['marketing']) && $formData['marketing'] === 'Yes') ? 'checked' : ''; ?>>
                             <label for="marketing">I'd like to receive updates about trading insights and platform features</label>
                         </div>
 
                         <button type="submit" class="btn-submit">
                             Book My Demo
-                            <span class="spinner"></span>
                         </button>
                     </form>
 
@@ -2254,28 +2335,6 @@
     <button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top">↑</button>
 
     <script>
-        function handleFormSubmit(event) {
-            event.preventDefault();
-
-            const button = event.target.querySelector('.btn-submit');
-            button.classList.add('loading');
-            button.disabled = true;
-
-            const formData = new FormData(event.target);
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
-
-            setTimeout(() => {
-                console.log('Form submitted:', data);
-                alert('Thank you for booking a demo! Our team will contact you within 24 hours to schedule your personalized platform walkthrough.');
-                event.target.reset();
-                button.classList.remove('loading');
-                button.disabled = false;
-            }, 2000);
-        }
-
         function scrollToForm() {
             document.getElementById('demo-form').scrollIntoView({
                 behavior: 'smooth',
