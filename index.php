@@ -89,7 +89,7 @@ $pageClass = 'page-home';
 require __DIR__ . '/includes/layout-start.php';
 ?>
 <section class="hero home-hero">
-    <div class="hero-container">
+    <div class="hero-container" >
         <div class="hero-content">
             <h1>Institutional-Grade Trading <span class="highlight">Powered by AI</span></h1>
             <p class="hero-subtitle">Experience the future of automated trading with our proprietary AI algorithms, trusted by over 20,000 traders worldwide.</p>
