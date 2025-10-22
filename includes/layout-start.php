@@ -62,7 +62,7 @@ $navItems = [
     <meta name="description" content="<?= htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/main.css">
     <?php if (!empty($googleTagIds)): ?>
         <script async src="https://www.googletagmanager.com/gtag/js?id=<?= rawurlencode($googleTagIds[0]); ?>"></script>
@@ -79,28 +79,14 @@ $navItems = [
 <body class="<?= isset($pageClass) ? htmlspecialchars($pageClass, ENT_QUOTES, 'UTF-8') : ''; ?>">
     <div class="page-wrapper">
         <div class="announcement-bar">
-            <span>Update</span>
-            <p>The market is buzzing about <strong>TradeEase AI</strong> — the AI-powered trading tool for serious returns.</p>
+            <span>New</span>
+            <p>TradeEase AI achieves <strong>87% win rate</strong> benchmarked against Q1 market volatility.</p>
         </div>
         <header class="header" data-header>
             <div class="header-container">
                 <a class="logo-container" href="index.php">
-                    <span class="logo-icon" aria-hidden="true">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="presentation" focusable="false">
-                            <defs>
-                                <linearGradient id="tradeease-logo-gradient" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0" stop-color="#1A64FF" />
-                                    <stop offset="1" stop-color="#54A3FF" />
-                                </linearGradient>
-                            </defs>
-                            <path d="M8 6C8 4.89543 8.89543 4 10 4H26V9H12V12H22V17H12V26H6V6H8Z" fill="url(#tradeease-logo-gradient)" />
-                            <rect x="6" y="20" width="14" height="6" rx="3" fill="#1A64FF" opacity="0.4" />
-                        </svg>
-                    </span>
-                    <span class="logo-text">
-                        <span class="logo-name">TradeEase</span>
-                        <span class="logo-highlight">AI</span>
-                    </span>
+                    <div class="logo-icon">TE</div>
+                    <div class="logo-text">TradeEase<span>AI</span></div>
                 </a>
                 <nav class="nav" data-nav>
                     <ul class="nav-menu">

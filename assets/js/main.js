@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const header = document.querySelector('[data-header]');
     const nav = document.querySelector('[data-nav]');
+<<<<<<< codex/improve-landing-page-design-and-structure-y2rps8
     const navToggle = document.querySelector('[data-nav-toggle]');
     const scrollTopBtn = document.querySelector('[data-scroll-top]');
     const animatedElements = document.querySelectorAll('[data-animate]');
@@ -146,6 +147,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     marketingTrackingKeys.forEach((key) => {
         const storedValue = getStoredValue(`tradeease_${key}`);
+=======
+    const navMenu = nav ? nav.querySelector('.nav-menu') : null;
+    const navToggle = document.querySelector('[data-nav-toggle]');
+    const scrollTopBtn = document.querySelector('[data-scroll-top]');
+    const animatedElements = document.querySelectorAll('[data-animate]');
+    const trackingKeys = ['gclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+
+    const storage = (() => {
+        try {
+            const testKey = '__tradeease_storage_test__';
+            window.sessionStorage.setItem(testKey, testKey);
+            window.sessionStorage.removeItem(testKey);
+            return window.sessionStorage;
+        } catch (error) {
+            return null;
+        }
+    })();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    trackingKeys.forEach((key) => {
+        const value = urlParams.get(key);
+        if (!value || !storage) {
+            return;
+        }
+        storage.setItem(`tradeease_${key}`, value);
+    });
+
+    trackingKeys.forEach((key) => {
+        const storedValue = storage ? storage.getItem(`tradeease_${key}`) : null;
+>>>>>>> main
         if (!storedValue) {
             return;
         }
@@ -156,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+<<<<<<< codex/improve-landing-page-design-and-structure-y2rps8
     const applyAffiseTrackingToInputs = () => {
         const fieldMap = {
             clickid: 'affise_clickid',
@@ -208,11 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+=======
+>>>>>>> main
     const closeNav = () => {
         if (!nav) {
             return;
         }
         nav.classList.remove('is-open');
+<<<<<<< codex/improve-landing-page-design-and-structure-y2rps8
+=======
+        if (navMenu) {
+            navMenu.classList.remove('open');
+        }
+>>>>>>> main
         if (navToggle) {
             navToggle.classList.remove('active');
         }
@@ -224,6 +264,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         nav.classList.add('is-open');
+<<<<<<< codex/improve-landing-page-design-and-structure-y2rps8
+=======
+        if (navMenu) {
+            navMenu.classList.add('open');
+        }
+>>>>>>> main
         if (navToggle) {
             navToggle.classList.add('active');
         }

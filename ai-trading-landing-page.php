@@ -1,0 +1,2489 @@
+<?php
+$logFilePath = __DIR__ . '/tradeease-demo-requests.log';
+$submissionSuccess = false;
+$errorMessage = '';
+$formData = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $formData = [
+        'firstName'   => trim((string)($_POST['firstName'] ?? '')),
+        'lastName'    => trim((string)($_POST['lastName'] ?? '')),
+        'email'       => trim((string)($_POST['email'] ?? '')),
+        'phone'       => trim((string)($_POST['phone'] ?? '')),
+        'country'     => trim((string)($_POST['country'] ?? '')),
+        'investment'  => trim((string)($_POST['investment'] ?? '')),
+        'experience'  => trim((string)($_POST['experience'] ?? '')),
+        'goals'       => trim((string)($_POST['goals'] ?? '')),
+        'terms'       => isset($_POST['terms']) ? 'Yes' : 'No',
+        'marketing'   => isset($_POST['marketing']) ? 'Yes' : 'No',
+        'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN',
+        'user_agent'  => $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN',
+    ];
+
+    $requiredFields = ['firstName', 'lastName', 'email', 'phone', 'country', 'investment', 'experience'];
+    $missingFields = array_filter($requiredFields, function ($field) use ($formData) {
+        return $formData[$field] === '';
+    });
+
+    if (!empty($missingFields)) {
+        $errorMessage = 'Please fill in all required fields before submitting the form.';
+    } elseif (!filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
+        $errorMessage = 'Please provide a valid business email address.';
+    } elseif ($formData['terms'] !== 'Yes') {
+        $errorMessage = 'You must agree to the Terms & Conditions and Privacy Policy to continue.';
+    } else {
+        $timestamp = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s \U\T\C');
+        $logEntry = "==============================\n" .
+                    "Submission Time: {$timestamp}\n" .
+                    "First Name: {$formData['firstName']}\n" .
+                    "Last Name: {$formData['lastName']}\n" .
+                    "Email: {$formData['email']}\n" .
+                    "Phone: {$formData['phone']}\n" .
+                    "Country: {$formData['country']}\n" .
+                    "Investment Range: {$formData['investment']}\n" .
+                    "Experience: {$formData['experience']}\n" .
+                    "Goals: {$formData['goals']}\n" .
+                    "Marketing Opt-In: {$formData['marketing']}\n" .
+                    "Agreed to Terms: {$formData['terms']}\n" .
+                    "IP Address: {$formData['ip_address']}\n" .
+                    "User Agent: {$formData['user_agent']}\n" .
+                    "==============================\n\n";
+
+        $writeResult = @file_put_contents($logFilePath, $logEntry, FILE_APPEND | LOCK_EX);
+
+        if ($writeResult === false) {
+            $errorMessage = 'We were unable to store your request at this time. Please try again later.';
+        } else {
+            $submissionSuccess = true;
+            $formData = [];
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeEase AI | Professional Automated Trading Platform | Book Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0F1B3C;
+            --navy-dark: #0A1025;
+            --navy-light: #1A2951;
+            --navy-muted: #18223F;
+            --gold: #D4AF37;
+            --gold-light: #F4D03F;
+            --green: #00A86B;
+            --green-light: #00C781;
+            --gray-darker: #1B2333;
+            --gray-dark: #2C3E50;
+            --gray: #7F8C8D;
+            --gray-light: #ECF0F1;
+            --gray-pale: #F6F8FA;
+            --white: #FFFFFF;
+            --red: #E74C3C;
+            --blue-soft: #3B5BDB;
+            --gradient-hero: linear-gradient(135deg, rgba(15, 27, 60, 0.95) 0%, rgba(10, 16, 37, 0.95) 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--gray-dark);
+            background: radial-gradient(circle at 10% 20%, rgba(59, 91, 219, 0.08), transparent 35%),
+                        radial-gradient(circle at 90% 10%, rgba(212, 175, 55, 0.12), transparent 45%),
+                        var(--white);
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            width: 550px;
+            height: 550px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(244, 208, 63, 0.15), transparent 70%);
+            filter: blur(40px);
+            z-index: -2;
+        }
+
+        body::before {
+            top: -200px;
+            left: -200px;
+        }
+
+        body::after {
+            bottom: -250px;
+            right: -200px;
+            background: radial-gradient(circle, rgba(59, 91, 219, 0.12), transparent 70%);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: var(--navy);
+        }
+
+        .announcement-bar {
+            width: 100%;
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.92), rgba(244, 208, 63, 0.92));
+            color: var(--navy-dark);
+            text-align: center;
+            padding: 0.6rem 1rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 1200;
+        }
+
+        .announcement-bar span {
+            background: rgba(15, 27, 60, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 40px rgba(15, 27, 60, 0.05);
+            position: fixed;
+            width: 100%;
+            top: 2.5rem;
+            left: 0;
+            z-index: 1100;
+            transition: transform 0.4s ease, box-shadow 0.4s ease, top 0.4s ease;
+        }
+
+        .header.is-scrolled {
+            top: 0;
+            box-shadow: 0 18px 40px rgba(10, 16, 37, 0.14);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .logo-icon {
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, var(--navy), var(--navy-light));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 0.05em;
+            box-shadow: 0 10px 30px rgba(15, 27, 60, 0.25);
+        }
+
+        .logo-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--navy);
+            letter-spacing: 0.02em;
+        }
+
+        .logo-text span {
+            color: var(--gold);
+            font-weight: 400;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-menu a {
+            color: var(--gray-dark);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            transition: color 0.3s ease, transform 0.3s ease;
+            position: relative;
+            padding-bottom: 0.25rem;
+        }
+
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            color: var(--gold);
+        }
+
+        .nav-menu a:hover::after,
+        .nav-menu a.active::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .btn-demo-header {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--navy);
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 16px 40px rgba(212, 175, 55, 0.25);
+        }
+
+        .btn-demo-header:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 22px 55px rgba(212, 175, 55, 0.35);
+        }
+
+        .nav-toggle {
+            display: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(15, 27, 60, 0.15);
+            background: var(--white);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-toggle span,
+        .nav-toggle span::before,
+        .nav-toggle span::after {
+            display: block;
+            background: var(--navy);
+            height: 2px;
+            width: 18px;
+            position: relative;
+            border-radius: 999px;
+        }
+
+        .nav-toggle span::before,
+        .nav-toggle span::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            transition: transform 0.3s ease, top 0.3s ease, opacity 0.3s ease;
+        }
+
+        .nav-toggle span::before {
+            top: -6px;
+        }
+
+        .nav-toggle span::after {
+            top: 6px;
+        }
+
+        .nav-toggle.active span {
+            background: transparent;
+        }
+
+        .nav-toggle.active span::before {
+            top: 0;
+            transform: rotate(45deg);
+        }
+
+        .nav-toggle.active span::after {
+            top: 0;
+            transform: rotate(-45deg);
+        }
+
+        .hero {
+            padding: 11rem 2rem 7rem;
+            min-height: 720px;
+            position: relative;
+            overflow: hidden;
+            background: var(--gradient-hero);
+            color: var(--white);
+        }
+
+        .hero::before,
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.18), transparent 70%);
+            filter: blur(30px);
+            z-index: 0;
+        }
+
+        .hero::before {
+            top: -140px;
+            right: -160px;
+        }
+
+        .hero::after {
+            bottom: -200px;
+            left: -160px;
+            background: radial-gradient(circle, rgba(0, 167, 139, 0.2), transparent 70%);
+        }
+
+        .hero-gradient-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(15, 27, 60, 0.75), rgba(26, 41, 81, 0.55));
+            z-index: 1;
+            mix-blend-mode: overlay;
+        }
+
+        .hero-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2.6rem, 3.6vw + 1rem, 4.2rem);
+            line-height: 1.12;
+            color: var(--white);
+            margin-bottom: 1.75rem;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-content h1 .highlight {
+            color: var(--gold);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.88);
+            margin-bottom: 2.4rem;
+            font-weight: 300;
+            max-width: 540px;
+        }
+
+        .hero-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--navy);
+            padding: 1rem 2.5rem;
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 20px 55px rgba(212, 175, 55, 0.35);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--white);
+            padding: 1rem 2.2rem;
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover,
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2.8rem;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            color: var(--white);
+            min-width: 140px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.4rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .trust-banner {
+            margin-top: 3.5rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.2rem 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .trust-banner strong {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .trust-logos {
+            display: flex;
+            align-items: center;
+            gap: 1.8rem;
+            opacity: 0.75;
+            flex-wrap: wrap;
+        }
+
+        .trust-logo {
+            font-size: 0.95rem;
+            letter-spacing: 0.2em;
+        }
+
+        .demo-form-card {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        }
+
+        .demo-form-card::before {
+            content: '';
+            position: absolute;
+            width: 480px;
+            height: 480px;
+            top: -260px;
+            right: -200px;
+            background: radial-gradient(circle, rgba(244, 208, 63, 0.22), transparent 70%);
+            filter: blur(40px);
+            z-index: 0;
+        }
+
+        .demo-form-card::after {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: 17px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .demo-form-container {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(15, 27, 60, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-header h2 {
+            font-size: 1.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--navy);
+        }
+
+        .form-header p {
+            color: var(--gray);
+        }
+
+        .form-alert {
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            border: 1px solid transparent;
+        }
+
+        .form-alert strong {
+            font-weight: 700;
+        }
+
+        .form-alert.success {
+            background: rgba(0, 168, 107, 0.12);
+            border-color: rgba(0, 168, 107, 0.4);
+            color: #0F5132;
+        }
+
+        .form-alert.error {
+            background: rgba(231, 76, 60, 0.12);
+            border-color: rgba(231, 76, 60, 0.4);
+            color: #7A271A;
+        }
+
+        .demo-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-dark);
+            margin-bottom: 0.45rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.85rem;
+            border: 1px solid #E1E5E8;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--white);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.18);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin: 0.35rem 0;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            margin-top: 0.25rem;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--gold);
+        }
+
+        .form-checkbox label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        .form-checkbox a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--navy);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 18px 45px rgba(212, 175, 55, 0.35);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 26px 65px rgba(212, 175, 55, 0.45);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.4rem;
+            padding-top: 1.4rem;
+            border-top: 1px solid #E1E5E8;
+        }
+
+        .form-footer p {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--gray);
+            background: var(--gray-pale);
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+        }
+
+        .section {
+            padding: 6rem 2rem;
+        }
+
+        .section.light {
+            background: var(--gray-pale);
+        }
+
+        .section-dark {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 640px;
+            margin: 0.5rem auto 0;
+        }
+
+        .section-dark .section-header h2 {
+            color: var(--white);
+        }
+
+        .section-dark .section-header p {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.5rem;
+        }
+
+        .insight-card {
+            background: var(--white);
+            padding: 1.8rem;
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(15, 27, 60, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .insight-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--navy), var(--navy-light));
+            display: grid;
+            place-items: center;
+            color: var(--gold);
+            font-size: 1.35rem;
+            box-shadow: 0 14px 35px rgba(15, 27, 60, 0.15);
+        }
+
+        .insight-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+
+        .insight-text {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 18px;
+            text-align: left;
+            transition: all 0.35s ease;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: 17px;
+            border: 1px solid transparent;
+            transition: border-color 0.35s ease;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(212, 175, 55, 0.35);
+            box-shadow: 0 30px 75px rgba(15, 27, 60, 0.12);
+            transform: translateY(-6px);
+        }
+
+        .feature-card:hover::after {
+            border-color: rgba(212, 175, 55, 0.35);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--navy), var(--navy-light));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            font-size: 1.5rem;
+            box-shadow: 0 18px 40px rgba(15, 27, 60, 0.18);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--gray);
+            line-height: 1.8;
+        }
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .preview-content h2 {
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-content p {
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .preview-features {
+            list-style: none;
+            margin: 2.4rem 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .preview-features li {
+            padding: 1rem 1.4rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+        }
+
+        .check-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+
+        .preview-visual {
+            background: radial-gradient(circle at top left, rgba(212, 175, 55, 0.15), transparent 50%),
+                        linear-gradient(135deg, rgba(26, 41, 81, 0.95), rgba(15, 27, 60, 0.95));
+            padding: 2.2rem;
+            border-radius: 18px;
+            box-shadow: 0 32px 90px rgba(10, 16, 37, 0.38);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-visual::after {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: 17px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            pointer-events: none;
+        }
+
+        .dashboard-mock {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 1.8rem;
+            min-height: 420px;
+            position: relative;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #E1E5E8;
+        }
+
+        .dashboard-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .dashboard-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--green);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2.3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .chart-container {
+            height: 250px;
+            background: linear-gradient(to top, rgba(0, 168, 107, 0.05), transparent);
+            border-radius: 12px;
+            position: relative;
+            margin-bottom: 1.7rem;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200"><polyline points="0,180 50,160 100,140 150,120 200,130 250,100 300,90 350,70 400,60 450,40 500,30" stroke="%2300A86B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><polyline points="0,180 50,160 100,140 150,120 200,130 250,100 300,90 350,70 400,60 450,40 500,30" stroke="url(%23gradient)" stroke-width="0" fill="url(%23gradient)" opacity="0.32"/><defs><linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%2300A86B;stop-opacity:0.3" /><stop offset="100%" style="stop-color:%2300A86B;stop-opacity:0" /></linearGradient></defs></svg>');
+            background-size: 100% 100%;
+            background-position: bottom;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            padding: 1.1rem;
+            background: var(--gray-pale);
+            border-radius: 12px;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-bottom: 0.35rem;
+            letter-spacing: 0.04em;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            color: var(--green);
+            margin-top: 0.25rem;
+        }
+
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.8rem;
+            margin-top: 3rem;
+        }
+
+        .process-step {
+            text-align: center;
+            position: relative;
+            background: var(--white);
+            padding: 2.2rem 1.6rem;
+            border-radius: 18px;
+            box-shadow: 0 22px 55px rgba(15, 27, 60, 0.08);
+            border: 1px solid rgba(15, 27, 60, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .process-step:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 70px rgba(15, 27, 60, 0.12);
+        }
+
+        .step-number {
+            width: 64px;
+            height: 64px;
+            background: var(--gray-pale);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .process-step h3 {
+            font-size: 1.15rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .process-step p {
+            font-size: 0.95rem;
+            color: var(--gray);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .testimonial {
+            background: var(--gray-pale);
+            padding: 2.4rem;
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial::before {
+            content: '\u201C';
+            position: absolute;
+            top: 1.4rem;
+            left: 1.6rem;
+            font-size: 4.5rem;
+            color: rgba(212, 175, 55, 0.4);
+            font-family: 'Playfair Display', serif;
+        }
+
+        .testimonial-text {
+            margin-bottom: 1.8rem;
+            line-height: 1.85;
+            position: relative;
+            z-index: 1;
+            color: var(--gray-dark);
+        }
+
+        .testimonial-author {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .author-title {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .testimonial-rating {
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 2rem;
+            margin-top: 3.5rem;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2.5rem;
+            border-radius: 18px;
+            text-align: left;
+            position: relative;
+            transition: all 0.35s ease;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .pricing-card.featured {
+            transform: translateY(-10px);
+            box-shadow: 0 35px 90px rgba(0, 0, 0, 0.28);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08));
+        }
+
+        .pricing-card.featured::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gold);
+            color: var(--navy);
+            padding: 0.55rem 1.2rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .price {
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.3rem;
+        }
+
+        .price-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .pricing-features .check-icon {
+            width: 26px;
+            height: 26px;
+        }
+
+        .btn-pricing {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid var(--gold);
+            background: transparent;
+            color: var(--gold);
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.04em;
+        }
+
+        .pricing-card.featured .btn-pricing,
+        .btn-pricing:hover {
+            background: var(--gold);
+            color: var(--navy);
+            box-shadow: 0 20px 55px rgba(212, 175, 55, 0.35);
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, rgba(15, 27, 60, 0.95), rgba(10, 16, 37, 0.95));
+            padding: 5rem 2rem;
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before,
+        .cta-section::after {
+            content: '';
+            position: absolute;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.2), transparent 70%);
+            filter: blur(30px);
+        }
+
+        .cta-section::before {
+            top: -180px;
+            left: -140px;
+        }
+
+        .cta-section::after {
+            bottom: -200px;
+            right: -160px;
+        }
+
+        .cta-content {
+            max-width: 1040px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2.4rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .cta-card h3 {
+            font-size: 2rem;
+            color: var(--white);
+            margin-bottom: 1rem;
+        }
+
+        .cta-card p {
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 2rem;
+        }
+
+        .cta-points {
+            display: grid;
+            gap: 1.2rem;
+        }
+
+        .cta-point {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .cta-point span {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.18);
+            display: grid;
+            place-items: center;
+            font-size: 1.1rem;
+        }
+
+        .cta-highlight {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2.2rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: grid;
+            gap: 1.4rem;
+        }
+
+        .cta-highlight strong {
+            font-size: 1.4rem;
+        }
+
+        .cta-highlight button {
+            width: fit-content;
+        }
+
+        .faq {
+            background: var(--gray-pale);
+            padding: 6rem 2rem;
+        }
+
+        .faq-grid {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            gap: 1.2rem;
+        }
+
+        .faq-item {
+            background: var(--white);
+            border-radius: 16px;
+            border: 1px solid rgba(15, 27, 60, 0.08);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.4rem 1.6rem;
+            background: var(--white);
+            color: var(--navy);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05rem;
+        }
+
+        .faq-question span {
+            transition: transform 0.3s ease;
+        }
+
+        .faq-question.active span {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+
+        .faq-answer p {
+            padding: 0 1.6rem 1.4rem;
+            color: var(--gray);
+            line-height: 1.75;
+        }
+
+        .footer {
+            background: var(--navy);
+            color: var(--white);
+            padding: 4rem 2rem 1.5rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1.2rem;
+            color: var(--gold);
+        }
+
+        .footer-section p,
+        .footer-section ul {
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.8;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.75);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--gold);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--navy);
+            border: none;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            box-shadow: 0 16px 40px rgba(212, 175, 55, 0.35);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1500;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .metrics-wrapper {
+            background: var(--white);
+            padding: 3rem 2rem;
+            border-radius: 18px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.8rem;
+            box-shadow: 0 20px 55px rgba(15, 27, 60, 0.08);
+            margin-top: 3rem;
+        }
+
+        .metric-highlight {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .metric-highlight strong {
+            font-size: 2rem;
+            color: var(--navy);
+        }
+
+        .metric-highlight span {
+            font-size: 0.95rem;
+            color: var(--gray);
+        }
+
+        .metric-highlight em {
+            color: var(--green);
+            font-style: normal;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 167, 139, 0.14);
+            color: var(--green);
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 1024px) {
+            .header-container {
+                padding: 0.85rem 1.5rem;
+            }
+
+            .hero {
+                padding: 10rem 1.5rem 6rem;
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-form-card {
+                margin-top: 3rem;
+            }
+
+            .insight-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .features-grid,
+            .preview-container,
+            .process-steps,
+            .testimonials-grid,
+            .pricing-cards,
+            .cta-content,
+            .metrics-wrapper {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .footer-content {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .announcement-bar {
+                flex-direction: column;
+                gap: 0.4rem;
+                font-size: 0.85rem;
+                padding: 0.8rem 1.2rem;
+            }
+
+            .header {
+                top: 1.6rem;
+            }
+
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                right: 1.5rem;
+                background: var(--white);
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1.2rem;
+                border-radius: 12px;
+                box-shadow: 0 18px 40px rgba(15, 27, 60, 0.12);
+                width: min(280px, 80vw);
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(10px);
+                transition: all 0.3s ease;
+            }
+
+            .nav-menu.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateY(0);
+            }
+
+            .nav-menu li {
+                width: 100%;
+            }
+
+            .nav-menu a,
+            .nav-menu button {
+                display: block;
+                width: 100%;
+                padding: 0.75rem 0.5rem;
+            }
+
+            .nav-toggle {
+                display: inline-flex;
+            }
+
+            .btn-demo-header {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hero {
+                padding-top: 9rem;
+            }
+
+            .hero-stats {
+                gap: 1.8rem;
+            }
+
+            .form-row,
+            .metrics-wrapper,
+            .process-steps,
+            .testimonials-grid,
+            .features-grid,
+            .preview-container,
+            .pricing-cards,
+            .cta-content,
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-wrapper {
+                padding: 2rem 1.4rem;
+            }
+
+            .btn-secondary,
+            .btn-primary {
+                width: 100%;
+                text-align: center;
+            }
+
+            .scroll-to-top {
+                right: 20px;
+                bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-badges {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement-bar">
+        <span>NEW</span>
+        TradeEase AI earns "Best Automated Trading Platform 2024" at the Global FinTech Awards.
+        <button class="btn-secondary" style="padding: 0.45rem 1.2rem; font-size: 0.8rem;" onclick="scrollToForm()">Book Live Demo</button>
+    </div>
+
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-container">
+                <div class="logo-icon">TE</div>
+                <div class="logo-text">TradeEase<span>AI</span></div>
+            </div>
+            <nav>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#platform">Platform</a></li>
+                    <li><a href="#insights">Insights</a></li>
+                    <li><a href="#process">Process</a></li>
+                    <li><a href="#testimonials">Success Stories</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><button class="btn-demo-header" onclick="scrollToForm()">Book Demo</button></li>
+                </ul>
+                <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                    <span></span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="hero-gradient-overlay"></div>
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="badge-live">24/7 AI-Driven Execution</div>
+                <h1>Institutional-Grade Trading <span class="highlight">Powered by Intelligence</span></h1>
+                <p class="hero-subtitle">Experience the future of automated trading with machine learning models refined on 30+ years of market data and trusted by over 20,000 traders worldwide.</p>
+
+                <div class="hero-badges">
+                    <div class="hero-badge">MiFID II Compliant</div>
+                    <div class="hero-badge">Real-Time Risk Controls</div>
+                    <div class="hero-badge">Global Market Coverage</div>
+                </div>
+
+                <div class="hero-cta">
+                    <button class="btn-primary" onclick="scrollToForm()">Schedule Your Strategy Session</button>
+                    <button class="btn-secondary" onclick="document.querySelector('#platform').scrollIntoView({behavior: 'smooth'})">Explore Platform Tour</button>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" data-counter="250" data-prefix="£">£250</div>
+                        <div class="stat-label">Minimum Investment</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-counter="87" data-suffix="%">87%</div>
+                        <div class="stat-label">Average Win Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-counter="24" data-suffix="/7">24/7</div>
+                        <div class="stat-label">Live Market Coverage</div>
+                    </div>
+                </div>
+
+                <div class="trust-banner">
+                    <strong>Trusted by leading brokers</strong>
+                    <div class="trust-logos">
+                        <span class="trust-logo">MERRION</span>
+                        <span class="trust-logo">ALPHACAP</span>
+                        <span class="trust-logo">STELLAR FX</span>
+                        <span class="trust-logo">NORTHRIDGE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-form-card" id="demo-form">
+                <div class="demo-form-container">
+                    <div class="form-header">
+                        <h2>Schedule Your Demo</h2>
+                        <p>See our platform in action with a personalized walkthrough</p>
+                    </div>
+
+                    <?php if ($submissionSuccess): ?>
+                        <div class="form-alert success" role="status">
+                            <strong>Thank you!</strong> Your demo request has been received. Our team will contact you within 24 hours to schedule your personalized walkthrough.
+                        </div>
+                    <?php elseif ($errorMessage): ?>
+                        <div class="form-alert error" role="alert">
+                            <strong>We're sorry.</strong> <?php echo htmlspecialchars($errorMessage); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form class="demo-form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name *</label>
+                                <input type="text" id="firstName" name="firstName" value="<?php echo htmlspecialchars($formData['firstName'] ?? ''); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name *</label>
+                                <input type="text" id="lastName" name="lastName" value="<?php echo htmlspecialchars($formData['lastName'] ?? ''); ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="email">Business Email *</label>
+                            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($formData['email'] ?? ''); ?>" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="phone">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($formData['phone'] ?? ''); ?>" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="country">Country *</label>
+                                <select id="country" name="country" required>
+                                    <option value="">Select Country</option>
+                                    <option value="UK" <?php echo (isset($formData['country']) && $formData['country'] === 'UK') ? 'selected' : ''; ?>>United Kingdom</option>
+                                    <option value="US" <?php echo (isset($formData['country']) && $formData['country'] === 'US') ? 'selected' : ''; ?>>United States</option>
+                                    <option value="CA" <?php echo (isset($formData['country']) && $formData['country'] === 'CA') ? 'selected' : ''; ?>>Canada</option>
+                                    <option value="AU" <?php echo (isset($formData['country']) && $formData['country'] === 'AU') ? 'selected' : ''; ?>>Australia</option>
+                                    <option value="DE" <?php echo (isset($formData['country']) && $formData['country'] === 'DE') ? 'selected' : ''; ?>>Germany</option>
+                                    <option value="FR" <?php echo (isset($formData['country']) && $formData['country'] === 'FR') ? 'selected' : ''; ?>>France</option>
+                                    <option value="ES" <?php echo (isset($formData['country']) && $formData['country'] === 'ES') ? 'selected' : ''; ?>>Spain</option>
+                                    <option value="IT" <?php echo (isset($formData['country']) && $formData['country'] === 'IT') ? 'selected' : ''; ?>>Italy</option>
+                                    <option value="NL" <?php echo (isset($formData['country']) && $formData['country'] === 'NL') ? 'selected' : ''; ?>>Netherlands</option>
+                                    <option value="Other" <?php echo (isset($formData['country']) && $formData['country'] === 'Other') ? 'selected' : ''; ?>>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="investment">Investment Range *</label>
+                                <select id="investment" name="investment" required>
+                                    <option value="">Select Amount</option>
+                                    <option value="250-500" <?php echo (isset($formData['investment']) && $formData['investment'] === '250-500') ? 'selected' : ''; ?>>£250 - £500</option>
+                                    <option value="500-1000" <?php echo (isset($formData['investment']) && $formData['investment'] === '500-1000') ? 'selected' : ''; ?>>£500 - £1,000</option>
+                                    <option value="1000-5000" <?php echo (isset($formData['investment']) && $formData['investment'] === '1000-5000') ? 'selected' : ''; ?>>£1,000 - £5,000</option>
+                                    <option value="5000-10000" <?php echo (isset($formData['investment']) && $formData['investment'] === '5000-10000') ? 'selected' : ''; ?>>£5,000 - £10,000</option>
+                                    <option value="10000+" <?php echo (isset($formData['investment']) && $formData['investment'] === '10000+') ? 'selected' : ''; ?>>£10,000+</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="experience">Trading Experience *</label>
+                            <select id="experience" name="experience" required>
+                                <option value="">Select Experience Level</option>
+                                <option value="none" <?php echo (isset($formData['experience']) && $formData['experience'] === 'none') ? 'selected' : ''; ?>>No Experience</option>
+                                <option value="beginner" <?php echo (isset($formData['experience']) && $formData['experience'] === 'beginner') ? 'selected' : ''; ?>>Beginner (Less than 1 year)</option>
+                                <option value="intermediate" <?php echo (isset($formData['experience']) && $formData['experience'] === 'intermediate') ? 'selected' : ''; ?>>Intermediate (1-3 years)</option>
+                                <option value="advanced" <?php echo (isset($formData['experience']) && $formData['experience'] === 'advanced') ? 'selected' : ''; ?>>Advanced (3-5 years)</option>
+                                <option value="expert" <?php echo (isset($formData['experience']) && $formData['experience'] === 'expert') ? 'selected' : ''; ?>>Expert (5+ years)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="goals">Trading Goals (Optional)</label>
+                            <textarea id="goals" name="goals" placeholder="Tell us about your investment goals and what you hope to achieve..." rows="3"><?php echo htmlspecialchars($formData['goals'] ?? ''); ?></textarea>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="terms" name="terms" <?php echo (isset($formData['terms']) && $formData['terms'] === 'Yes') ? 'checked' : ''; ?> required>
+                            <label for="terms">I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></label>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="marketing" name="marketing" <?php echo (isset($formData['marketing']) && $formData['marketing'] === 'Yes') ? 'checked' : ''; ?>>
+                            <label for="marketing">I'd like to receive updates about trading insights and platform features</label>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            Book My Demo
+                        </button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p>Your demo includes platform walkthrough, strategy consultation, and Q&A session</p>
+                        <div class="trust-badges">
+                            <div class="trust-badge">
+                                <span>🔒</span>
+                                <span>SSL Secured</span>
+                            </div>
+                            <div class="trust-badge">
+                                <span>✓</span>
+                                <span>GDPR Compliant</span>
+                            </div>
+                            <div class="trust-badge">
+                                <span>⚡</span>
+                                <span>Instant Confirmation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="section" id="insights">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Elite Traders Choose TradeEase AI</h2>
+                <p>From hedge funds to private wealth offices, our technology delivers precision execution and institutional-grade governance in a single platform.</p>
+            </div>
+
+            <div class="insight-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">🚀</div>
+                    <div class="insight-title">Adaptive AI Models</div>
+                    <p class="insight-text">Self-learning algorithms calibrated daily with market microstructure intelligence to stay ahead of volatility regimes.</p>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">🧠</div>
+                    <div class="insight-title">Quant Research Desk</div>
+                    <p class="insight-text">Dedicated quant strategists refining signals and monitoring drift to ensure consistent alpha generation.</p>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">🔐</div>
+                    <div class="insight-title">Bank-Grade Security</div>
+                    <p class="insight-text">Encrypted infrastructure with SOC 2 Type II compliance and continuous threat detection.</p>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">📉</div>
+                    <div class="insight-title">Drawdown Protection</div>
+                    <p class="insight-text">Sophisticated risk engines enforcing portfolio-level guardrails and exposure limits in real time.</p>
+                </div>
+            </div>
+
+            <div class="metrics-wrapper">
+                <div class="metric-highlight">
+                    <strong data-counter="234" data-suffix="%">234%</strong>
+                    <span>Average annualized return uplift for professional clients running hybrid strategies.</span>
+                    <em>Backtested across 14 markets</em>
+                </div>
+                <div class="metric-highlight">
+                    <strong data-counter="40" data-suffix="+">40+</strong>
+                    <span>Institutional data partners delivering global liquidity and depth.</span>
+                    <em>Aggregated order flow</em>
+                </div>
+                <div class="metric-highlight">
+                    <strong data-counter="92" data-suffix="%">92%</strong>
+                    <span>Client retention rate over the last 24 months.</span>
+                    <em>World-class support</em>
+                </div>
+                <div class="metric-highlight">
+                    <strong data-counter="12" data-suffix=" ms">12 ms</strong>
+                    <span>Average order routing latency across major exchanges.</span>
+                    <em>Low-latency core</em>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section light" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Advanced Trading Technology</h2>
+                <p>Leverage institutional-grade tools and AI-driven insights for superior trading performance</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>AI Market Analysis</h3>
+                    <p>Real-time analysis of market conditions using machine learning algorithms trained on 30+ years of market data.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Precision Execution</h3>
+                    <p>Automated trade execution with microsecond precision, ensuring optimal entry and exit points.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Risk Management</h3>
+                    <p>Advanced risk controls with automatic stop-loss, position sizing, and portfolio diversification strategies.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Strategy Optimization</h3>
+                    <p>Continuous strategy refinement based on market conditions and performance metrics.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Smart Alerts</h3>
+                    <p>Intelligent notifications for market opportunities, executed trades, and portfolio performance.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Multi-Platform Access</h3>
+                    <p>Trade from anywhere with our web platform, mobile apps, and API integration capabilities.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section section-dark" id="platform">
+        <div class="preview-container">
+            <div class="preview-content">
+                <h2>Professional Trading Platform</h2>
+                <p>Our comprehensive platform combines cutting-edge technology with intuitive design, making professional trading accessible to everyone.</p>
+
+                <ul class="preview-features">
+                    <li>
+                        <span class="check-icon">✓</span>
+                        <div>
+                            <strong>Real-Time Market Data</strong> - Live prices, charts, and market depth across multiple exchanges
+                        </div>
+                    </li>
+                    <li>
+                        <span class="check-icon">✓</span>
+                        <div>
+                            <strong>Automated Trading Strategies</strong> - Pre-configured and customizable AI trading algorithms
+                        </div>
+                    </li>
+                    <li>
+                        <span class="check-icon">✓</span>
+                        <div>
+                            <strong>Portfolio Analytics</strong> - Comprehensive performance tracking and risk metrics
+                        </div>
+                    </li>
+                    <li>
+                        <span class="check-icon">✓</span>
+                        <div>
+                            <strong>Educational Resources</strong> - Trading academy with expert tutorials and market insights
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="preview-visual">
+                <div class="dashboard-mock">
+                    <div class="dashboard-header">
+                        <div class="dashboard-title">Trading Dashboard</div>
+                        <div class="dashboard-status">
+                            <span class="status-dot"></span>
+                            <span>Live Trading</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-line"></div>
+                    </div>
+
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <div class="metric-label">Total Return</div>
+                            <div class="metric-value">+23.4%</div>
+                            <div class="metric-change">↑ 2.3% today</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Win Rate</div>
+                            <div class="metric-value">87.2%</div>
+                            <div class="metric-change">15 of 17 trades</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Active Positions</div>
+                            <div class="metric-value">4</div>
+                            <div class="metric-change">£2,847 invested</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section light" id="process">
+        <div class="container">
+            <div class="section-header">
+                <h2>Your Journey to Automated Trading</h2>
+                <p>Simple onboarding process with expert guidance every step of the way</p>
+            </div>
+
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <h3>Book Demo</h3>
+                    <p>Schedule a personalized platform walkthrough with our trading experts</p>
+                </div>
+
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <h3>Account Setup</h3>
+                    <p>Complete registration and configure your trading preferences</p>
+                </div>
+
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <h3>Fund Account</h3>
+                    <p>Deposit your initial investment starting from just £250</p>
+                </div>
+
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <h3>Start Trading</h3>
+                    <p>Activate AI trading and monitor your portfolio's growth</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>Trusted by Thousands of Traders</h2>
+                <p>See what our clients say about their experience with TradeEase AI</p>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial">
+                    <p class="testimonial-text">
+                        "The AI technology is genuinely impressive. I've been trading for years, and this platform has consistently outperformed my manual strategies. The risk management features give me peace of mind."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <div class="author-name">James Richardson</div>
+                            <div class="author-title">Portfolio Manager, London</div>
+                        </div>
+                        <div class="testimonial-rating">★★★★★</div>
+                    </div>
+                </div>
+
+                <div class="testimonial">
+                    <p class="testimonial-text">
+                        "As a complete beginner, I was skeptical at first. But the personal mentoring and educational resources made everything clear. I'm now seeing consistent returns with minimal effort."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <div class="author-name">Sarah Mitchell</div>
+                            <div class="author-title">Business Owner, Manchester</div>
+                        </div>
+                        <div class="testimonial-rating">★★★★★</div>
+                    </div>
+                </div>
+
+                <div class="testimonial">
+                    <p class="testimonial-text">
+                        "The platform's performance during volatile markets is remarkable. The AI adapts quickly to changing conditions, something I struggled with when trading manually."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <div class="author-name">Michael Chen</div>
+                            <div class="author-title">Software Engineer, Edinburgh</div>
+                        </div>
+                        <div class="testimonial-rating">★★★★★</div>
+                    </div>
+                </div>
+
+                <div class="testimonial">
+                    <p class="testimonial-text">
+                        "Professional-grade tools at an accessible price point. The £250 minimum allowed me to test the waters, and I've since scaled up significantly based on the results."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <div class="author-name">Emma Thompson</div>
+                            <div class="author-title">Financial Analyst, Birmingham</div>
+                        </div>
+                        <div class="testimonial-rating">★★★★★</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section section-dark" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2>Transparent Investment Plans</h2>
+                <p>Choose the plan that aligns with your trading goals</p>
+            </div>
+
+            <div class="pricing-cards">
+                <div class="pricing-card">
+                    <h3>Starter</h3>
+                    <div class="price">£250</div>
+                    <div class="price-subtitle">Minimum deposit</div>
+                    <ul class="pricing-features">
+                        <li><span class="check-icon">✓</span> Full platform access</li>
+                        <li><span class="check-icon">✓</span> AI trading algorithms</li>
+                        <li><span class="check-icon">✓</span> Basic support</li>
+                        <li><span class="check-icon">✓</span> Educational resources</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="scrollToForm()">Get Started</button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <h3>Professional</h3>
+                    <div class="price">£1,000</div>
+                    <div class="price-subtitle">Recommended deposit</div>
+                    <ul class="pricing-features">
+                        <li><span class="check-icon">✓</span> Everything in Starter</li>
+                        <li><span class="check-icon">✓</span> Priority support</li>
+                        <li><span class="check-icon">✓</span> Advanced strategies</li>
+                        <li><span class="check-icon">✓</span> 1-on-1 mentoring</li>
+                        <li><span class="check-icon">✓</span> Custom indicators</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="scrollToForm()">Book Demo</button>
+                </div>
+
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">£5,000+</div>
+                    <div class="price-subtitle">Premium features</div>
+                    <ul class="pricing-features">
+                        <li><span class="check-icon">✓</span> Everything in Professional</li>
+                        <li><span class="check-icon">✓</span> Dedicated account manager</li>
+                        <li><span class="check-icon">✓</span> Custom AI models</li>
+                        <li><span class="check-icon">✓</span> API access</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="scrollToForm()">Contact Sales</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta-content">
+            <div class="cta-card">
+                <h3>Accelerate Your Trading Desk</h3>
+                <p>Unlock institutional-level automation, tailored quant insights, and concierge onboarding designed to scale your capital efficiently.</p>
+                <div class="cta-points">
+                    <div class="cta-point">
+                        <span>1</span>
+                        <div>
+                            <strong>Custom Strategy Blueprint</strong>
+                            <p>Receive a bespoke plan outlining optimal models, risk budgets, and execution venues for your profile.</p>
+                        </div>
+                    </div>
+                    <div class="cta-point">
+                        <span>2</span>
+                        <div>
+                            <strong>Full White-Glove Setup</strong>
+                            <p>Our solutions engineers configure integrations, compliance checks, and workflows in record time.</p>
+                        </div>
+                    </div>
+                    <div class="cta-point">
+                        <span>3</span>
+                        <div>
+                            <strong>Performance Governance</strong>
+                            <p>Continuous monitoring and optimisation cycles with quarterly strategy reviews.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="cta-highlight">
+                <strong>Ready to deploy TradeEase AI?</strong>
+                <p>Join a network of top-performing traders leveraging proprietary AI automation to outperform the market.</p>
+                <button class="btn-primary" onclick="scrollToForm()">Secure My Demo</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq" id="faq">
+        <div class="section-header">
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know before getting started with TradeEase AI</p>
+        </div>
+        <div class="faq-grid">
+            <div class="faq-item">
+                <button class="faq-question">How quickly can I start trading? <span>+</span></button>
+                <div class="faq-answer">
+                    <p>Once your demo is complete and compliance documents are verified, most clients begin live trading within 48 hours. Our onboarding team guides you through every step.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">Do I retain control over my funds? <span>+</span></button>
+                <div class="faq-answer">
+                    <p>Absolutely. Funds remain within your chosen broker account. TradeEase AI executes trades according to predefined strategies while you retain full oversight and withdrawal control.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">Is TradeEase AI compliant with regulations? <span>+</span></button>
+                <div class="faq-answer">
+                    <p>Yes. Our infrastructure is MiFID II and GDPR compliant, and we partner with fully regulated brokers in every region we operate.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">Can I integrate my existing strategies? <span>+</span></button>
+                <div class="faq-answer">
+                    <p>Professional and Enterprise plans include API access and quant engineering support, allowing you to import and refine your proprietary models.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About TradeEase AI</h4>
+                <p>Leading the future of automated trading with cutting-edge AI technology. Our platform combines 30+ years of market expertise with advanced machine learning to deliver consistent results for traders worldwide.</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Platform</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#">API Documentation</a></li>
+                    <li><a href="#">System Status</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Trading Academy</a></li>
+                    <li><a href="#">Market Analysis</a></li>
+                    <li><a href="#">Strategy Guides</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Risk Disclosure</a></li>
+                    <li><a href="#">Regulatory Compliance</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2024 TradeEase AI. All rights reserved. | Trading involves risk. Past performance is not indicative of future results.</p>
+        </div>
+    </footer>
+
+    <button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top">↑</button>
+
+    <script>
+        function scrollToForm() {
+            document.getElementById('demo-form').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+
+        const header = document.querySelector('.header');
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                header.classList.add('is-scrolled');
+            } else {
+                header.classList.remove('is-scrolled');
+            }
+
+            if (window.scrollY > 600) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        const navToggle = document.getElementById('navToggle');
+        const navMenu = document.getElementById('navMenu');
+        navToggle.addEventListener('click', () => {
+            navToggle.classList.toggle('active');
+            navMenu.classList.toggle('open');
+        });
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                navToggle.classList.remove('active');
+                navMenu.classList.remove('open');
+            });
+        });
+
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-menu a');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    const active = document.querySelector(`.nav-menu a[href="#${entry.target.id}"]`);
+                    if (active) {
+                        active.classList.add('active');
+                    }
+                }
+            });
+        }, { threshold: 0.25 });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('blur', () => {
+                if (field.required && !field.value) {
+                    field.style.borderColor = '#E74C3C';
+                } else {
+                    field.style.borderColor = '#E1E5E8';
+                }
+            });
+        });
+
+        const phoneField = document.getElementById('phone');
+        if (phoneField) {
+            phoneField.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 0) {
+                    if (value.length <= 3) {
+                        value = value;
+                    } else if (value.length <= 6) {
+                        value = value.slice(0, 3) + '-' + value.slice(3);
+                    } else {
+                        value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                    }
+                }
+                e.target.value = value;
+            });
+        }
+
+        const animatedElements = document.querySelectorAll('.feature-card, .process-step, .testimonial, .pricing-card, .insight-card');
+        const animateOnScroll = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(20px)';
+                    requestAnimationFrame(() => {
+                        entry.target.style.transition = 'all 0.6s ease';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    });
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+
+        animatedElements.forEach(el => animateOnScroll.observe(el));
+
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const answer = button.nextElementSibling;
+                const isOpen = button.classList.contains('active');
+
+                document.querySelectorAll('.faq-question').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.nextElementSibling.style.maxHeight = null;
+                });
+
+                if (!isOpen) {
+                    button.classList.add('active');
+                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-counter]').forEach(counter => {
+            const updateCounter = (entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = parseFloat(counter.getAttribute('data-counter')) || 0;
+                        const prefix = counter.dataset.prefix || '';
+                        const suffix = counter.dataset.suffix || '';
+                        const duration = 1200;
+                        const start = performance.now();
+
+                        const animate = (time) => {
+                            const progress = Math.min((time - start) / duration, 1);
+                            const value = Math.floor(progress * target);
+                            counter.textContent = `${prefix}${value}${suffix}`;
+                            if (progress < 1) {
+                                requestAnimationFrame(animate);
+                            }
+                        };
+
+                        requestAnimationFrame(animate);
+                        obs.unobserve(counter);
+                    }
+                });
+            };
+
+            const counterObserver = new IntersectionObserver(updateCounter, { threshold: 0.4 });
+            counterObserver.observe(counter);
+        });
+    </script>
+</body>
+</html>
