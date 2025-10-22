@@ -8,6 +8,21 @@ if (!is_array($config)) {
     $config = [];
 }
 
+$assetVersion = '';
+$assetFilemtimes = [];
+$cssAssetPath = __DIR__ . '/../assets/css/main.css';
+$jsAssetPath = __DIR__ . '/../assets/js/main.js';
+
+if (is_file($cssAssetPath)) {
+    $assetFilemtimes[] = (int) filemtime($cssAssetPath);
+}
+if (is_file($jsAssetPath)) {
+    $assetFilemtimes[] = (int) filemtime($jsAssetPath);
+}
+if (!empty($assetFilemtimes)) {
+    $assetVersion = (string) max($assetFilemtimes);
+}
+
 $googleAnalyticsMeasurementId = $googleAnalyticsMeasurementId
     ?? trim((string)($config['google_analytics_measurement_id'] ?? ''));
 $googleAdsConversionId = $googleAdsConversionId
@@ -52,6 +67,9 @@ $navItems = [
     ['id' => 'company', 'label' => 'Company', 'href' => 'company.php'],
     ['id' => 'contact', 'label' => 'Contact', 'href' => 'contact.php'],
 ];
+
+$cssHref = 'assets/css/main.css' . ($assetVersion !== '' ? '?v=' . rawurlencode($assetVersion) : '');
+$jsSrc = 'assets/js/main.js' . ($assetVersion !== '' ? '?v=' . rawurlencode($assetVersion) : '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,8 +80,8 @@ $navItems = [
     <meta name="description" content="<?= htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= htmlspecialchars($cssHref, ENT_QUOTES, 'UTF-8'); ?>">
     <?php if (!empty($googleTagIds)): ?>
         <script async src="https://www.googletagmanager.com/gtag/js?id=<?= rawurlencode($googleTagIds[0]); ?>"></script>
         <script>

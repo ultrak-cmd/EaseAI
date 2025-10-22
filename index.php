@@ -53,14 +53,8 @@ function tradeease_write_submission_log(array $formData, string $countryCode, st
         "Sub3: {$formData['sub3']}\n" .
         "Sub4: {$formData['sub4']}\n" .
         "Sub5: {$formData['sub5']}\n" .
-        "Sub6: {$formData['sub6']}\n" .
-        "Sub7: {$formData['sub7']}\n" .
-        "Sub8: {$formData['sub8']}\n" .
         "Ref ID: {$formData['ref_id']}\n" .
         "Agreed to Terms: {$formData['terms']}\n" .
-        "Affise Geo: {$formData['affise_geo']}\n" .
-        "Device UA: {$formData['device_ua']}\n" .
-        "Impression ID: {$formData['impression_id']}\n" .
         "IP Address: {$formData['ip_address']}\n" .
         "User Agent: {$formData['user_agent']}\n" .
         "Referrer: {$formData['referrer']}\n" .

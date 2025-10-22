@@ -71,12 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sub2: 'sub2',
         sub3: 'sub3',
         sub4: 'sub4',
-        sub5: 'sub5',
-        sub6: 'sub6',
-        sub7: 'sub7',
-        sub8: 'sub8',
-        device_ua: 'device_ua',
-        impression_id: 'impression_id'
+        sub5: 'sub5'
     };
 
     Object.keys(affiseParams).forEach((param) => {
@@ -85,11 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
             affiseTracking[param] = value;
         }
     });
-
-    const geoParam = urlParams.get('geo');
-    if (geoParam) {
-        affiseTracking.geo = geoParam;
-    }
 
     if (storage) {
         try {
@@ -146,34 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     marketingTrackingKeys.forEach((key) => {
         const storedValue = getStoredValue(`tradeease_${key}`);
-    const navMenu = nav ? nav.querySelector('.nav-menu') : null;
-    const navToggle = document.querySelector('[data-nav-toggle]');
-    const scrollTopBtn = document.querySelector('[data-scroll-top]');
-    const animatedElements = document.querySelectorAll('[data-animate]');
-    const trackingKeys = ['gclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
-
-    const storage = (() => {
-        try {
-            const testKey = '__tradeease_storage_test__';
-            window.sessionStorage.setItem(testKey, testKey);
-            window.sessionStorage.removeItem(testKey);
-            return window.sessionStorage;
-        } catch (error) {
-            return null;
-        }
-    })();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    trackingKeys.forEach((key) => {
-        const value = urlParams.get(key);
-        if (!value || !storage) {
-            return;
-        }
-        storage.setItem(`tradeease_${key}`, value);
-    });
-
-    trackingKeys.forEach((key) => {
-        const storedValue = storage ? storage.getItem(`tradeease_${key}`) : null;
         if (!storedValue) {
             return;
         }
@@ -194,13 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sub2: 'sub2',
             sub3: 'sub3',
             sub4: 'sub4',
-            sub5: 'sub5',
-            sub6: 'sub6',
-            sub7: 'sub7',
-            sub8: 'sub8',
-            device_ua: 'device_ua',
-            impression_id: 'impression_id',
-            geo: 'affise_geo'
+            sub5: 'sub5'
         };
 
         Object.entries(fieldMap).forEach(([trackingKey, inputName]) => {
@@ -236,16 +192,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const countryDialCodes = {
+        UK: '+44',
+        US: '+1',
+        CA: '+1',
+        AU: '+61',
+        DE: '+49',
+        FR: '+33',
+        ES: '+34',
+        IT: '+39',
+        NL: '+31'
+    };
+
+    const countrySelect = document.querySelector('#country');
+    const countryCodeInput = document.querySelector('input[name="country_code"]');
+
+    const updateCountryCode = (force = false) => {
+        if (!countryCodeInput) {
+            return;
+        }
+
+        const selectedCountry = countrySelect ? countrySelect.value : '';
+        const dialCode = countryDialCodes[selectedCountry] || '';
+
+        if (force || countryCodeInput.value === '') {
+            countryCodeInput.value = dialCode;
+        }
+    };
+
+    if (countrySelect && countryCodeInput) {
+        updateCountryCode(true);
+        countrySelect.addEventListener('change', () => updateCountryCode(true));
+    }
 
     const closeNav = () => {
         if (!nav) {
             return;
         }
         nav.classList.remove('is-open');
-        if (navMenu) {
-            navMenu.classList.remove('open');
-        }
-
         if (navToggle) {
             navToggle.classList.remove('active');
         }
@@ -257,10 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         nav.classList.add('is-open');
-        if (navMenu) {
-            navMenu.classList.add('open');
-        }
-      
         if (navToggle) {
             navToggle.classList.add('active');
         }
