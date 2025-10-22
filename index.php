@@ -88,6 +88,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'utm_campaign'=> trim((string)($_POST['utm_campaign'] ?? '')),
         'utm_term'    => trim((string)($_POST['utm_term'] ?? '')),
         'utm_content' => trim((string)($_POST['utm_content'] ?? '')),
+        'affise_clickid' => trim((string)($_POST['affise_clickid'] ?? ($_POST['clickid'] ?? ''))),
+        'pid'         => trim((string)($_POST['pid'] ?? '')),
+        'offer_id'    => trim((string)($_POST['offer_id'] ?? '')),
+        'sub1'        => trim((string)($_POST['sub1'] ?? '')),
+        'sub2'        => trim((string)($_POST['sub2'] ?? '')),
+        'sub3'        => trim((string)($_POST['sub3'] ?? '')),
+        'sub4'        => trim((string)($_POST['sub4'] ?? '')),
+        'sub5'        => trim((string)($_POST['sub5'] ?? '')),
+        'sub6'        => trim((string)($_POST['sub6'] ?? '')),
+        'sub7'        => trim((string)($_POST['sub7'] ?? '')),
+        'sub8'        => trim((string)($_POST['sub8'] ?? '')),
+        'ref_id'      => trim((string)($_POST['ref_id'] ?? '')),
+        'affise_geo'  => trim((string)($_POST['affise_geo'] ?? '')),
+        'country_code'=> trim((string)($_POST['country_code'] ?? '')),
+        'device_ua'   => trim((string)($_POST['device_ua'] ?? '')),
+        'impression_id'=> trim((string)($_POST['impression_id'] ?? '')),
         'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN',
         'user_agent'  => $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN',
         'referrer'    => $_SERVER['HTTP_REFERER'] ?? 'UNKNOWN',
@@ -105,45 +121,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($formData['terms'] !== 'Yes') {
         $errorMessage = 'You must agree to the Terms & Conditions and Privacy Policy to continue.';
     } else {
-        $timestamp = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s \U\T\C');
-        $logEntry = "==============================\n" .
-                    "Submission Time: {$timestamp}\n" .
-                    "First Name: {$formData['firstName']}\n" .
-                    "Last Name: {$formData['lastName']}\n" .
-                    "Email: {$formData['email']}\n" .
-                    "Phone: {$formData['phone']}\n" .
-                    "Country: {$formData['country']}\n" .
-                    "Investment Range: {$formData['investment']}\n" .
-                    "Experience: {$formData['experience']}\n" .
-                    "Goals: {$formData['goals']}\n" .
-                    "Marketing Opt-In: {$formData['marketing']}\n" .
-                    "GCLID: {$formData['gclid']}\n" .
-                    "UTM Source: {$formData['utm_source']}\n" .
-                    "UTM Medium: {$formData['utm_medium']}\n" .
-                    "UTM Campaign: {$formData['utm_campaign']}\n" .
-                    "UTM Term: {$formData['utm_term']}\n" .
-                    "UTM Content: {$formData['utm_content']}\n" .
-                    "Agreed to Terms: {$formData['terms']}\n" .
-                    "IP Address: {$formData['ip_address']}\n" .
-                    "User Agent: {$formData['user_agent']}\n" .
-                    "Referrer: {$formData['referrer']}\n" .
-                    "==============================\n\n";
+        $countryCode = $formData['country_code'];
+        if ($countryCode === '' && $formData['country'] !== '') {
+            $countryCode = $dialCodes[$formData['country']] ?? '';
+        }
 
-        $writeResult = @file_put_contents($logFilePath, $logEntry, FILE_APPEND | LOCK_EX);
+        $affiliatePayload = [
+            'first_name' => $formData['firstName'],
+            'last_name' => $formData['lastName'],
+            'email' => $formData['email'],
+            'phone' => $formData['phone'],
+            'phone_number' => $formData['phone'],
+            'country_code' => $countryCode,
+            'affise_clickid' => $formData['affise_clickid'],
+            'pid' => $formData['pid'],
+            'offer_id' => $formData['offer_id'],
+            'sub1' => $formData['sub1'],
+            'sub2' => $formData['sub2'],
+            'sub3' => $formData['sub3'],
+            'sub4' => $formData['sub4'],
+            'sub5' => $formData['sub5'],
+            'source' => $_SERVER['HTTP_HOST'] ?? '',
+        ];
 
-        if ($writeResult === false) {
-            $errorMessage = 'We were unable to store your request at this time. Please try again later.';
+        $wolfProResult = tradeease_submit_wolf_pro_lead($affiliatePayload, $config);
+
+        if (!($wolfProResult['success'] ?? false)) {
+            $errorMessage = $wolfProResult['message'] ?? 'We were unable to process your request. Please try again later.';
         } else {
-            $queryParams = ['submitted' => '1'];
-            if ($formData['firstName'] !== '') {
-                $queryParams['first'] = $formData['firstName'];
+            $writeResult = tradeease_write_submission_log($formData, $countryCode, $logFilePath);
+
+            if (!$writeResult) {
+                $errorMessage = 'We were unable to store your request at this time. Please try again later.';
+            } else {
+                $queryParams = ['submitted' => '1'];
+                if ($formData['firstName'] !== '') {
+                    $queryParams['first'] = $formData['firstName'];
+                }
+                $redirectUrl = 'thank-you.php';
+                if (!empty($queryParams)) {
+                    $redirectUrl .= '?' . http_build_query($queryParams);
+                }
+                header('Location: ' . $redirectUrl);
+                exit;
             }
-            $redirectUrl = 'thank-you.php';
-            if (!empty($queryParams)) {
-                $redirectUrl .= '?' . http_build_query($queryParams);
-            }
-            header('Location: ' . $redirectUrl);
-            exit;
         }
     }
 }
@@ -156,10 +177,10 @@ $pageClass = 'page-home';
 require __DIR__ . '/includes/layout-start.php';
 ?>
 <section class="hero home-hero">
-    <div class="hero-container" >
+    <div class="hero-container">
         <div class="hero-content">
-            <h1>Institutional-Grade Trading <span class="highlight">Powered by AI</span></h1>
-            <p class="hero-subtitle">Experience the future of automated trading with our proprietary AI algorithms, trusted by over 20,000 traders worldwide.</p>
+            <h1>The Market Is Buzzing About <span class="highlight">TradeEase AI</span></h1>
+            <p class="hero-subtitle">The AI-powered trading tool delivering institutional precision, dynamic risk controls, and effortless automation for modern investors.</p>
 
             <div class="hero-stats">
                 <div class="stat-item">
@@ -177,8 +198,8 @@ require __DIR__ . '/includes/layout-start.php';
             </div>
 
             <div class="hero-actions">
-                <a class="btn btn-primary" href="platform.php">Explore Platform</a>
-                <a class="btn btn-outline" href="#features">Discover Features</a>
+                <a class="btn btn-primary" href="#demo-form">Book Your Demo</a>
+                <a class="btn btn-outline" href="platform.php">See the Platform</a>
             </div>
         </div>
 
@@ -283,6 +304,22 @@ require __DIR__ . '/includes/layout-start.php';
                 <input type="hidden" name="utm_campaign" value="<?= htmlspecialchars($formData['utm_campaign'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="hidden" name="utm_term" value="<?= htmlspecialchars($formData['utm_term'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="hidden" name="utm_content" value="<?= htmlspecialchars($formData['utm_content'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="affise_clickid" value="<?= htmlspecialchars($formData['affise_clickid'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="pid" value="<?= htmlspecialchars($formData['pid'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="offer_id" value="<?= htmlspecialchars($formData['offer_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="ref_id" value="<?= htmlspecialchars($formData['ref_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub1" value="<?= htmlspecialchars($formData['sub1'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub2" value="<?= htmlspecialchars($formData['sub2'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub3" value="<?= htmlspecialchars($formData['sub3'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub4" value="<?= htmlspecialchars($formData['sub4'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub5" value="<?= htmlspecialchars($formData['sub5'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub6" value="<?= htmlspecialchars($formData['sub6'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub7" value="<?= htmlspecialchars($formData['sub7'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="sub8" value="<?= htmlspecialchars($formData['sub8'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="affise_geo" value="<?= htmlspecialchars($formData['affise_geo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="country_code" value="<?= htmlspecialchars($formData['country_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="device_ua" value="<?= htmlspecialchars($formData['device_ua'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="impression_id" value="<?= htmlspecialchars($formData['impression_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <button type="submit" class="btn btn-submit">Book My Demo</button>
             </form>
             <div class="form-footer">
