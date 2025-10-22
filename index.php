@@ -132,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'source' => $_SERVER['HTTP_HOST'] ?? '',
         ];
 
-        $advertiserResult = tradeease_submit_advertiser_lead($affiliatePayload, $config);
+        $wolfProResult = tradeease_submit_wolf_pro_lead($affiliatePayload, $config);
 
-        if (!($advertiserResult['success'] ?? false)) {
-            $errorMessage = $advertiserResult['message'] ?? 'We were unable to process your request. Please try again later.';
+        if (!($wolfProResult['success'] ?? false)) {
+            $errorMessage = $wolfProResult['message'] ?? 'We were unable to process your request. Please try again later.';
         } else {
             $writeResult = tradeease_write_submission_log($formData, $countryCode, $logFilePath);
 
