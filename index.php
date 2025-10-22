@@ -90,14 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'sub3'        => trim((string)($_POST['sub3'] ?? '')),
         'sub4'        => trim((string)($_POST['sub4'] ?? '')),
         'sub5'        => trim((string)($_POST['sub5'] ?? '')),
-        'sub6'        => trim((string)($_POST['sub6'] ?? '')),
-        'sub7'        => trim((string)($_POST['sub7'] ?? '')),
-        'sub8'        => trim((string)($_POST['sub8'] ?? '')),
         'ref_id'      => trim((string)($_POST['ref_id'] ?? '')),
-        'affise_geo'  => trim((string)($_POST['affise_geo'] ?? '')),
         'country_code'=> trim((string)($_POST['country_code'] ?? '')),
-        'device_ua'   => trim((string)($_POST['device_ua'] ?? '')),
-        'impression_id'=> trim((string)($_POST['impression_id'] ?? '')),
         'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN',
         'user_agent'  => $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN',
         'referrer'    => $_SERVER['HTTP_REFERER'] ?? 'UNKNOWN',
@@ -307,13 +301,7 @@ require __DIR__ . '/includes/layout-start.php';
                 <input type="hidden" name="sub3" value="<?= htmlspecialchars($formData['sub3'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="hidden" name="sub4" value="<?= htmlspecialchars($formData['sub4'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="hidden" name="sub5" value="<?= htmlspecialchars($formData['sub5'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="hidden" name="sub6" value="<?= htmlspecialchars($formData['sub6'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="hidden" name="sub7" value="<?= htmlspecialchars($formData['sub7'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="hidden" name="sub8" value="<?= htmlspecialchars($formData['sub8'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="hidden" name="affise_geo" value="<?= htmlspecialchars($formData['affise_geo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="hidden" name="country_code" value="<?= htmlspecialchars($formData['country_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="hidden" name="device_ua" value="<?= htmlspecialchars($formData['device_ua'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                <input type="hidden" name="impression_id" value="<?= htmlspecialchars($formData['impression_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                 <button type="submit" class="btn btn-submit">Book My Demo</button>
             </form>
             <div class="form-footer">
