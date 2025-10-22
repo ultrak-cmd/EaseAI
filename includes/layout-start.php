@@ -1,0 +1,143 @@
+<?php
+$config = [];
+$configPath = __DIR__ . '/config.php';
+if (is_readable($configPath)) {
+    $config = require $configPath;
+}
+if (!is_array($config)) {
+    $config = [];
+}
+
+$assetVersion = '';
+$assetFilemtimes = [];
+$cssAssetPath = __DIR__ . '/../assets/css/main.css';
+$jsAssetPath = __DIR__ . '/../assets/js/main.js';
+
+if (is_file($cssAssetPath)) {
+    $assetFilemtimes[] = (int) filemtime($cssAssetPath);
+}
+if (is_file($jsAssetPath)) {
+    $assetFilemtimes[] = (int) filemtime($jsAssetPath);
+}
+if (!empty($assetFilemtimes)) {
+    $assetVersion = (string) max($assetFilemtimes);
+}
+
+$googleAnalyticsMeasurementId = $googleAnalyticsMeasurementId
+    ?? trim((string)($config['google_analytics_measurement_id'] ?? ''));
+$googleAdsConversionId = $googleAdsConversionId
+    ?? trim((string)($config['google_ads_conversion_id'] ?? ''));
+$googleAdsConversionLabel = $googleAdsConversionLabel
+    ?? trim((string)($config['google_ads_conversion_label'] ?? ''));
+$googleAdsConversionValue = $googleAdsConversionValue
+    ?? trim((string)($config['google_ads_conversion_value'] ?? ''));
+$googleAdsConversionCurrency = $googleAdsConversionCurrency
+    ?? trim((string)($config['google_ads_conversion_currency'] ?? 'GBP'));
+
+if (!isset($googleAdsConversionSendTo)) {
+    $googleAdsConversionSendTo = '';
+    if ($googleAdsConversionId !== '') {
+        $googleAdsConversionSendTo = $googleAdsConversionId;
+        if ($googleAdsConversionLabel !== '') {
+            $googleAdsConversionSendTo .= '/' . $googleAdsConversionLabel;
+        }
+    }
+}
+
+$googleTagIds = array_values(array_filter([
+    $googleAnalyticsMeasurementId,
+    $googleAdsConversionId,
+]));
+
+if (!isset($pageTitle)) {
+    $pageTitle = 'TradeEase AI | Institutional-Grade Automated Trading';
+}
+if (!isset($metaDescription)) {
+    $metaDescription = 'TradeEase AI delivers institutional-grade automated trading with AI strategies, risk controls, and personalized support.';
+}
+if (!isset($activeNav)) {
+    $activeNav = 'home';
+}
+$navItems = [
+    ['id' => 'home', 'label' => 'Home', 'href' => 'index.php'],
+    ['id' => 'platform', 'label' => 'Platform', 'href' => 'platform.php'],
+    ['id' => 'solutions', 'label' => 'Solutions', 'href' => 'solutions.php'],
+    ['id' => 'pricing', 'label' => 'Pricing', 'href' => 'pricing.php'],
+    ['id' => 'resources', 'label' => 'Resources', 'href' => 'resources.php'],
+    ['id' => 'company', 'label' => 'Company', 'href' => 'company.php'],
+    ['id' => 'contact', 'label' => 'Contact', 'href' => 'contact.php'],
+];
+
+$cssHref = 'assets/css/main.css' . ($assetVersion !== '' ? '?v=' . rawurlencode($assetVersion) : '');
+$jsSrc = 'assets/js/main.js' . ($assetVersion !== '' ? '?v=' . rawurlencode($assetVersion) : '');
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></title>
+    <meta name="description" content="<?= htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= htmlspecialchars($cssHref, ENT_QUOTES, 'UTF-8'); ?>">
+    <?php if (!empty($googleTagIds)): ?>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=<?= rawurlencode($googleTagIds[0]); ?>"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            <?php foreach ($googleTagIds as $tagId): ?>
+            gtag('config', <?= json_encode($tagId, JSON_UNESCAPED_SLASHES); ?>);
+            <?php endforeach; ?>
+        </script>
+    <?php endif; ?>
+</head>
+<body class="<?= isset($pageClass) ? htmlspecialchars($pageClass, ENT_QUOTES, 'UTF-8') : ''; ?>">
+    <div class="page-wrapper">
+        <div class="announcement-bar">
+            <span>Update</span>
+            <p>The market is buzzing about <strong>TradeEase AI</strong> — the AI-powered trading tool for serious returns.</p>
+        </div>
+        <header class="header" data-header>
+            <div class="header-container">
+                <a class="logo-container" href="index.php">
+                    <span class="logo-icon" aria-hidden="true">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="presentation" focusable="false">
+                            <defs>
+                                <linearGradient id="tradeease-logo-gradient" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0" stop-color="#1A64FF" />
+                                    <stop offset="1" stop-color="#54A3FF" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M8 6C8 4.89543 8.89543 4 10 4H26V9H12V12H22V17H12V26H6V6H8Z" fill="url(#tradeease-logo-gradient)" />
+                            <rect x="6" y="20" width="14" height="6" rx="3" fill="#1A64FF" opacity="0.4" />
+                        </svg>
+                    </span>
+                    <span class="logo-text">
+                        <span class="logo-name">TradeEase</span>
+                        <span class="logo-highlight">AI</span>
+                    </span>
+                </a>
+                <nav class="nav" data-nav>
+                    <ul class="nav-menu">
+                        <?php foreach ($navItems as $item): ?>
+                            <?php $isActive = $activeNav === $item['id'] ? 'is-active' : ''; ?>
+                            <li class="nav-item <?= $isActive; ?>">
+                                <a href="<?= htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8'); ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <a class="btn btn-demo" href="index.php#demo-form">Book Demo</a>
+                </nav>
+                <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </header>
+        <main class="page-content">
