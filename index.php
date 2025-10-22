@@ -1,7 +1,74 @@
 <?php
+$config = require __DIR__ . '/includes/config.php';
+if (!is_array($config)) {
+    $config = [];
+}
+require_once __DIR__ . '/includes/affiliate.php';
+
 $logFilePath = __DIR__ . '/tradeease-demo-requests.log';
 $errorMessage = '';
 $formData = [];
+
+$dialCodes = [
+    'UK' => '+44',
+    'US' => '+1',
+    'CA' => '+1',
+    'AU' => '+61',
+    'DE' => '+49',
+    'FR' => '+33',
+    'ES' => '+34',
+    'IT' => '+39',
+    'NL' => '+31',
+];
+
+/**
+ * Write the structured submission log entry to disk.
+ */
+function tradeease_write_submission_log(array $formData, string $countryCode, string $logFilePath): bool
+{
+    $timestamp = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s \U\T\C');
+    $logEntry = "==============================\n" .
+        "Submission Time: {$timestamp}\n" .
+        "First Name: {$formData['firstName']}\n" .
+        "Last Name: {$formData['lastName']}\n" .
+        "Email: {$formData['email']}\n" .
+        "Phone: {$formData['phone']}\n" .
+        "Country Code: {$countryCode}\n" .
+        "Country: {$formData['country']}\n" .
+        "Investment Range: {$formData['investment']}\n" .
+        "Experience: {$formData['experience']}\n" .
+        "Goals: {$formData['goals']}\n" .
+        "Marketing Opt-In: {$formData['marketing']}\n" .
+        "GCLID: {$formData['gclid']}\n" .
+        "UTM Source: {$formData['utm_source']}\n" .
+        "UTM Medium: {$formData['utm_medium']}\n" .
+        "UTM Campaign: {$formData['utm_campaign']}\n" .
+        "UTM Term: {$formData['utm_term']}\n" .
+        "UTM Content: {$formData['utm_content']}\n" .
+        "Affise Click ID: {$formData['affise_clickid']}\n" .
+        "Affise PID: {$formData['pid']}\n" .
+        "Affise Offer ID: {$formData['offer_id']}\n" .
+        "Sub1: {$formData['sub1']}\n" .
+        "Sub2: {$formData['sub2']}\n" .
+        "Sub3: {$formData['sub3']}\n" .
+        "Sub4: {$formData['sub4']}\n" .
+        "Sub5: {$formData['sub5']}\n" .
+        "Sub6: {$formData['sub6']}\n" .
+        "Sub7: {$formData['sub7']}\n" .
+        "Sub8: {$formData['sub8']}\n" .
+        "Ref ID: {$formData['ref_id']}\n" .
+        "Agreed to Terms: {$formData['terms']}\n" .
+        "Affise Geo: {$formData['affise_geo']}\n" .
+        "Device UA: {$formData['device_ua']}\n" .
+        "Impression ID: {$formData['impression_id']}\n" .
+        "IP Address: {$formData['ip_address']}\n" .
+        "User Agent: {$formData['user_agent']}\n" .
+        "Referrer: {$formData['referrer']}\n" .
+        "==============================\n\n";
+
+    $result = @file_put_contents($logFilePath, $logEntry, FILE_APPEND | LOCK_EX);
+    return $result !== false;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData = [
