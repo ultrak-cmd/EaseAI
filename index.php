@@ -132,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'source' => $_SERVER['HTTP_HOST'] ?? '',
         ];
 
-        $advertiserResult = tradeease_submit_advertiser_lead($affiliatePayload, $config);
+        $wolfProResult = tradeease_submit_wolf_pro_lead($affiliatePayload, $config);
 
-        if (!($advertiserResult['success'] ?? false)) {
-            $errorMessage = $advertiserResult['message'] ?? 'We were unable to process your request. Please try again later.';
+        if (!($wolfProResult['success'] ?? false)) {
+            $errorMessage = $wolfProResult['message'] ?? 'We were unable to process your request. Please try again later.';
         } else {
             $writeResult = tradeease_write_submission_log($formData, $countryCode, $logFilePath);
 
@@ -500,10 +500,6 @@ require __DIR__ . '/includes/layout-start.php';
                 <p>Activate AI trading and monitor your portfolio's growth</p>
             </div>
         </div>
-        <div class="section-cta inline" data-animate>
-            <div class="section-cta__text">Ready to start step one?</div>
-            <a class="btn btn-primary" href="#demo-form">Book my demo</a>
-        </div>
     </div>
 </section>
 <section class="testimonials" id="testimonials">
@@ -553,10 +549,6 @@ require __DIR__ . '/includes/layout-start.php';
                     <div class="testimonial-rating">★★★★★</div>
                 </div>
             </div>
-        </div>
-        <div class="section-cta" data-animate>
-            <div class="section-cta__text">Join thousands of traders experiencing the same results.</div>
-            <a class="btn btn-primary" href="#demo-form">Secure your slot</a>
         </div>
     </div>
 </section>
