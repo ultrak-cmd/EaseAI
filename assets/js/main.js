@@ -146,6 +146,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     marketingTrackingKeys.forEach((key) => {
         const storedValue = getStoredValue(`tradeease_${key}`);
+    const navMenu = nav ? nav.querySelector('.nav-menu') : null;
+    const navToggle = document.querySelector('[data-nav-toggle]');
+    const scrollTopBtn = document.querySelector('[data-scroll-top]');
+    const animatedElements = document.querySelectorAll('[data-animate]');
+    const trackingKeys = ['gclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+
+    const storage = (() => {
+        try {
+            const testKey = '__tradeease_storage_test__';
+            window.sessionStorage.setItem(testKey, testKey);
+            window.sessionStorage.removeItem(testKey);
+            return window.sessionStorage;
+        } catch (error) {
+            return null;
+        }
+    })();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    trackingKeys.forEach((key) => {
+        const value = urlParams.get(key);
+        if (!value || !storage) {
+            return;
+        }
+        storage.setItem(`tradeease_${key}`, value);
+    });
+
+    trackingKeys.forEach((key) => {
+        const storedValue = storage ? storage.getItem(`tradeease_${key}`) : null;
         if (!storedValue) {
             return;
         }
@@ -208,11 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+
     const closeNav = () => {
         if (!nav) {
             return;
         }
         nav.classList.remove('is-open');
+        if (navMenu) {
+            navMenu.classList.remove('open');
+        }
+
         if (navToggle) {
             navToggle.classList.remove('active');
         }
@@ -224,6 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         nav.classList.add('is-open');
+        if (navMenu) {
+            navMenu.classList.add('open');
+        }
+      
         if (navToggle) {
             navToggle.classList.add('active');
         }

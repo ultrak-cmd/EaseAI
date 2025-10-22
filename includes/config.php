@@ -11,6 +11,9 @@ return [
     'wolfpro_token'                  => getenv('WOLFPRO_TOKEN') ?: '',
     'wolfpro_affid'                  => getenv('WOLFPRO_AFFID') ?: '396',
     'wolfpro_funnel'                 => getenv('WOLFPRO_FUNNEL') ?: 'cryptocfdtrader',
+    'wolfpro_lead_storage_path'      => getenv('WOLFPRO_LEAD_STORAGE') ?: __DIR__ . '/../storage/wolfpro-pending-leads.json',
+
     'affise_postback_base_url'       => getenv('AFFISE_POSTBACK_BASE_URL') ?: 'https://offers-alphanetwork.affise.com/postback',
     'affise_registration_action_id'  => getenv('AFFISE_REGISTRATION_ACTION_ID') ?: '1',
+    'affise_ftd_action_id'           => getenv('AFFISE_FTD_ACTION_ID') ?: '2',
 ];
