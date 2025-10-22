@@ -362,6 +362,10 @@ require __DIR__ . '/includes/layout-start.php';
                 <p>Trade from anywhere with our web platform, mobile apps, and API integration capabilities.</p>
             </div>
         </div>
+        <div class="section-cta" data-animate>
+            <div class="section-cta__text">Walk through the core TradeEase automations with a specialist.</div>
+            <a class="btn btn-primary" href="#demo-form">Book your live demo</a>
+        </div>
     </div>
 </section>
 <section class="insights" id="insights">
@@ -555,42 +559,43 @@ require __DIR__ . '/includes/layout-start.php';
             <p>Choose the plan that aligns with your trading goals</p>
         </div>
         <div class="pricing-cards">
-            <div class="pricing-card" data-animate>
-                <h3>Starter</h3>
+            <div class="pricing-card featured pricing-primary" data-animate>
+                <div class="plan-badge">Best for New Investors</div>
+                <h3>Core Plan</h3>
                 <div class="price">£250</div>
-                <div class="price-subtitle">Minimum deposit</div>
+                <div class="price-subtitle">One-time minimum deposit</div>
+                <div class="price-note">0% consultation fee — invest everything into your portfolio.</div>
                 <ul class="pricing-features">
-                    <li><span class="check-icon">✓</span> Full platform access</li>
-                    <li><span class="check-icon">✓</span> AI trading algorithms</li>
-                    <li><span class="check-icon">✓</span> Basic support</li>
-                    <li><span class="check-icon">✓</span> Educational resources</li>
+                    <li><span class="check-icon">✓</span> Full TradeEase AI platform access</li>
+                    <li><span class="check-icon">✓</span> AI trading algorithms &amp; risk controls</li>
+                    <li><span class="check-icon">✓</span> Weekly performance insights</li>
+                    <li><span class="check-icon">✓</span> Dedicated onboarding specialist</li>
                 </ul>
-                <a class="btn btn-pricing" href="#demo-form">Get Started</a>
+                <a class="btn btn-pricing" href="#demo-form">Book demo for £250</a>
             </div>
-            <div class="pricing-card featured" data-animate>
-                <h3>Professional</h3>
+            <div class="pricing-card" data-animate>
+                <h3>Growth Plan</h3>
                 <div class="price">£1,000</div>
                 <div class="price-subtitle">Recommended deposit</div>
                 <ul class="pricing-features">
-                    <li><span class="check-icon">✓</span> Everything in Starter</li>
-                    <li><span class="check-icon">✓</span> Priority support</li>
-                    <li><span class="check-icon">✓</span> Advanced strategies</li>
-                    <li><span class="check-icon">✓</span> 1-on-1 mentoring</li>
-                    <li><span class="check-icon">✓</span> Custom indicators</li>
+                    <li><span class="check-icon">✓</span> Everything in Core Plan</li>
+                    <li><span class="check-icon">✓</span> Priority support channel</li>
+                    <li><span class="check-icon">✓</span> Strategy calibration sessions</li>
+                    <li><span class="check-icon">✓</span> Extended backtesting library</li>
                 </ul>
-                <a class="btn btn-pricing" href="#demo-form">Book Demo</a>
+                <a class="btn btn-pricing" href="#demo-form">Upgrade my trading</a>
             </div>
-            <div class="pricing-card" data-animate>
-                <h3>Enterprise</h3>
-                <div class="price">£5,000+</div>
-                <div class="price-subtitle">Premium features</div>
+            <div class="pricing-card pricing-contact" data-animate>
+                <h3>Custom Programme</h3>
+                <div class="price">Tailored</div>
+                <div class="price-subtitle">Built for desks &amp; enterprise</div>
                 <ul class="pricing-features">
-                    <li><span class="check-icon">✓</span> Everything in Professional</li>
-                    <li><span class="check-icon">✓</span> Dedicated account manager</li>
-                    <li><span class="check-icon">✓</span> Custom AI models</li>
-                    <li><span class="check-icon">✓</span> API access</li>
+                    <li><span class="check-icon">✓</span> Bespoke automation strategies</li>
+                    <li><span class="check-icon">✓</span> Institutional integrations</li>
+                    <li><span class="check-icon">✓</span> White-glove success management</li>
+                    <li><span class="check-icon">✓</span> Compliance-ready reporting</li>
                 </ul>
-                <a class="btn btn-pricing" href="contact.php">Contact Sales</a>
+                <a class="btn btn-pricing" href="#demo-form">Talk to sales</a>
             </div>
         </div>
     </div>
