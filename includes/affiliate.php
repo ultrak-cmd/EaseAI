@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Advertiser and Affise integration helpers for the TradeEase landing experience.
+ * Wolf Pro and Affise integration helpers for the TradeEase landing experience.
  * This file mirrors the behaviour of the provided WordPress implementation without
  * relying on any WP-specific functions.
  */
@@ -30,28 +30,24 @@ if (!function_exists('tradeease_sanitize_email')) {
     }
 }
 
-function tradeease_generate_advertiser_password(int $length = 10): string
+function tradeease_generate_wolf_pro_password(int $length = 12): string
 {
-    $length = max(6, min(12, $length));
-
-    $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    $numbers = '0123456789';
-
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    $maxIndex = strlen($alphabet) - 1;
     $password = '';
-    $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
-    $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
-    $password .= $numbers[random_int(0, strlen($numbers) - 1)];
-
-    $allChars = $uppercase . $lowercase . $numbers;
-    for ($i = 3; $i < $length; $i++) {
-        $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $alphabet[random_int(0, $maxIndex)];
     }
-
-    return str_shuffle($password);
+    return $password;
 }
 
-function tradeease_submit_advertiser_lead(array $form_data, array $config): array
+function tradeease_affiliate_storage_path(array $config): string
+{
+    $path = $config['wolfpro_lead_storage_path'] ?? (__DIR__ . '/../storage/wolfpro-pending-leads.json');
+    return $path;
+}
+
+function tradeease_submit_wolf_pro_lead(array $form_data, array $config): array
 {
     $affise_clickid = tradeease_sanitize_text_field($form_data['affise_clickid'] ?? ($form_data['clickid'] ?? ''));
     $pid = tradeease_sanitize_text_field($form_data['pid'] ?? '');
@@ -64,7 +60,7 @@ function tradeease_submit_advertiser_lead(array $form_data, array $config): arra
     $sub5 = tradeease_sanitize_text_field($form_data['sub5'] ?? '');
 
     error_log("Affise: clickid={$affise_clickid}, pid={$pid}, offer_id={$offer_id}");
-    error_log("Advertiser mapping: sub1={$sub1} (aff_sub), sub2={$sub2} (aff_sub2)");
+    error_log("Wolf Pro mapping: sub1={$sub1} (aff_sub), sub2={$sub2} (aff_sub2)");
 
     $first_name = tradeease_sanitize_text_field($form_data['first_name'] ?? '');
     $last_name = tradeease_sanitize_text_field($form_data['last_name'] ?? '');
@@ -150,24 +146,19 @@ function tradeease_submit_advertiser_lead(array $form_data, array $config): arra
         return ['success' => false, 'message' => 'Please enter a valid email address'];
     }
 
-    $password = tradeease_generate_advertiser_password();
+    $password = tradeease_generate_wolf_pro_password();
 
-    $advertiserAffid = (string)($config['advertiser_affiliate_id'] ?? '396');
-    $advertiserFunnel = (string)($config['advertiser_funnel'] ?? 'cryptocfdtrader');
+    $wolf_token = (string)($config['wolfpro_token'] ?? '');
+    $wolf_affid = (string)($config['wolfpro_affid'] ?? '396');
+    $wolf_funnel = (string)($config['wolfpro_funnel'] ?? 'cryptocfdtrader');
 
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $defaultSource = '';
-    if (!empty($_SERVER['HTTP_HOST'])) {
-        $defaultSource = $scheme . '://' . $_SERVER['HTTP_HOST'];
-    }
-
-    $payload = [
+    $wolf_data = [
         'first_name' => $first_name,
         'last_name' => $last_name,
         'email' => $email,
         'password' => $password,
-        'funnel' => $advertiserFunnel,
-        'source' => $form_data['source'] ?? $defaultSource,
+        'funnel' => $wolf_funnel,
+        'source' => $form_data['source'] ?? ($_SERVER['HTTP_HOST'] ?? ''),
         'area_code' => $country_code,
         'phone' => $phone,
         'aff_sub' => $sub1 !== '' ? $sub1 : 'direct',
@@ -175,29 +166,29 @@ function tradeease_submit_advertiser_lead(array $form_data, array $config): arra
         'aff_sub3' => $offer_id !== '' ? $offer_id : 'none',
         'aff_sub4' => $pid !== '' ? $pid : 'none',
         'aff_sub5' => $affise_clickid !== '' ? $affise_clickid : 'none',
-        'affid' => $advertiserAffid !== '' ? $advertiserAffid : '396',
+        'affid' => $wolf_affid !== '' ? $wolf_affid : '396',
         '_ip' => $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? ''),
         'hitid' => uniqid('wp_', true),
     ];
 
-    error_log('Sending to advertiser: ' . json_encode($payload));
+    error_log('Sending to Wolf Pro: ' . json_encode($wolf_data));
 
-    $response = tradeease_http_post('https://api.proapi.org/leads', $payload, 30);
+    $response = tradeease_http_post('https://api.proapi.org/leads', $wolf_data, 30);
     if ($response['error']) {
-        error_log('Advertiser connection error: ' . $response['error']);
+        error_log('Wolf Pro connection error: ' . $response['error']);
         return ['success' => false, 'message' => 'Connection failed: ' . $response['error']];
     }
 
     $response_code = $response['status'] ?? 0;
     $response_body = $response['body'] ?? '';
 
-    error_log('Advertiser response code: ' . $response_code);
-    error_log('Advertiser body: ' . $response_body);
+    error_log('Wolf Pro Response: ' . $response_code);
+    error_log('Wolf Pro Body: ' . $response_body);
 
-    $advertiser_response_data = json_decode($response_body, true);
+    $wolf_response_data = json_decode($response_body, true);
 
     if ($response_code === 200 || $response_code === 201) {
-        error_log('Advertiser submission successful');
+        error_log('Wolf Pro submission successful');
 
         if ($affise_clickid !== '') {
             $affise_postback = [
@@ -221,6 +212,7 @@ function tradeease_submit_advertiser_lead(array $form_data, array $config): arra
             'sub4' => $sub4,
             'sub5' => $sub5,
         ];
+        tradeease_store_lead_for_tracking($email, $tracking_data, $config);
 
         return [
             'success' => true,
@@ -228,18 +220,195 @@ function tradeease_submit_advertiser_lead(array $form_data, array $config): arra
             'password' => $password,
             'country_code' => $country_code,
             'local_phone' => $phone,
-            'advertiser_response' => $advertiser_response_data,
+            'wolf_response' => $wolf_response_data,
             'tracking' => $tracking_data,
         ];
     }
 
-    error_log('Advertiser submission failed: ' . $response_code);
+    error_log('Wolf Pro submission failed: ' . $response_code);
     return [
         'success' => false,
         'message' => 'Submission failed',
         'code' => $response_code,
         'error' => $response_body,
     ];
+}
+
+function tradeease_store_lead_for_tracking(string $email, array $tracking_data, array $config): void
+{
+    $storagePath = tradeease_affiliate_storage_path($config);
+    $storageDir = dirname($storagePath);
+    if (!is_dir($storageDir)) {
+        mkdir($storageDir, 0775, true);
+    }
+
+    $email_key = strtolower(trim($email));
+    $lead_entry = [
+        'email' => $email_key,
+        'affise_clickid' => $tracking_data['affise_clickid'] ?? '',
+        'pid' => $tracking_data['pid'] ?? '',
+        'offer_id' => $tracking_data['offer_id'] ?? '',
+        'sub1' => $tracking_data['sub1'] ?? '',
+        'sub2' => $tracking_data['sub2'] ?? '',
+        'sub3' => $tracking_data['sub3'] ?? '',
+        'sub4' => $tracking_data['sub4'] ?? '',
+        'sub5' => $tracking_data['sub5'] ?? '',
+        'date' => gmdate('Y-m-d H:i:s'),
+        'status' => 'pending',
+        'conversion_type' => 'registration',
+    ];
+
+    $leads = tradeease_read_leads($storagePath);
+    $leads = array_values(array_filter($leads, static function (array $lead) use ($email_key): bool {
+        return empty($lead['email']) || $lead['email'] !== $email_key;
+    }));
+
+    $leads[] = $lead_entry;
+    tradeease_write_leads($storagePath, $leads);
+    error_log('Stored lead for FTD tracking: ' . $email_key);
+}
+
+function tradeease_read_leads(string $storagePath): array
+{
+    if (!is_file($storagePath)) {
+        return [];
+    }
+
+    $contents = file_get_contents($storagePath);
+    if ($contents === false || $contents === '') {
+        return [];
+    }
+
+    $decoded = json_decode($contents, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+
+    return $decoded;
+}
+
+function tradeease_write_leads(string $storagePath, array $leads): void
+{
+    $tempPath = $storagePath . '.tmp';
+    $json = json_encode($leads, JSON_PRETTY_PRINT);
+    file_put_contents($tempPath, $json === false ? '[]' : $json, LOCK_EX);
+    rename($tempPath, $storagePath);
+}
+
+function tradeease_check_pending_ftds_with_postback(array $config): array
+{
+    $token = (string)($config['wolfpro_token'] ?? '');
+    $results = [
+        'processed' => 0,
+        'ftd_found' => 0,
+        'remaining' => 0,
+        'errors' => [],
+    ];
+
+    if ($token === '') {
+        $results['errors'][] = 'Wolf Pro token is missing.';
+        error_log('Wolf Pro FTD check aborted: missing token');
+        return $results;
+    }
+
+    $storagePath = tradeease_affiliate_storage_path($config);
+    $leads = tradeease_read_leads($storagePath);
+
+    if (empty($leads)) {
+        error_log('No pending leads for FTD check');
+        return $results;
+    }
+
+    error_log('Checking ' . count($leads) . ' leads for FTD');
+
+    $from = gmdate('Y-m-d H:i:s', strtotime('-30 days'));
+    $to = gmdate('Y-m-d H:i:s');
+
+    $url = sprintf(
+        'https://api.proapi.org/affiliate_deposits/?token=%s&from=%s&to=%s&filter=ftd&limit=500',
+        rawurlencode($token),
+        rawurlencode($from),
+        rawurlencode($to)
+    );
+
+    $response = tradeease_http_get($url, 30);
+    if ($response['error']) {
+        $results['errors'][] = $response['error'];
+        error_log('Wolf Pro FTD API error: ' . $response['error']);
+        return $results;
+    }
+
+    $deposits = json_decode($response['body'] ?? '[]', true);
+    if (!is_array($deposits)) {
+        $results['errors'][] = 'Invalid FTD response format';
+        error_log('Invalid FTD response format');
+        return $results;
+    }
+
+    error_log('Found ' . count($deposits) . ' deposits');
+
+    $deposit_by_email = [];
+    foreach ($deposits as $deposit) {
+        if (empty($deposit['email'])) {
+            continue;
+        }
+        $key = strtolower(trim((string)$deposit['email']));
+        if ($key === '') {
+            continue;
+        }
+        if (!isset($deposit_by_email[$key])) {
+            $deposit_by_email[$key] = $deposit;
+        } else {
+            $existingAmount = isset($deposit_by_email[$key]['amount']) ? (float)$deposit_by_email[$key]['amount'] : 0.0;
+            $newAmount = isset($deposit['amount']) ? (float)$deposit['amount'] : 0.0;
+            if ($newAmount > $existingAmount) {
+                $deposit_by_email[$key] = $deposit;
+            }
+        }
+    }
+
+    $updated_leads = [];
+    $affiseBaseUrl = rtrim((string)($config['affise_postback_base_url'] ?? ''), '?');
+    $ftdActionId = (string)($config['affise_ftd_action_id'] ?? '2');
+
+    foreach ($leads as $lead) {
+        $results['processed']++;
+        $lead_email = strtolower(trim((string)($lead['email'] ?? '')));
+        if ($lead_email === '') {
+            continue;
+        }
+
+        if (isset($deposit_by_email[$lead_email])) {
+            $deposit = $deposit_by_email[$lead_email];
+            $results['ftd_found']++;
+            error_log('FTD found for: ' . $lead_email);
+
+            if (!empty($lead['affise_clickid']) && $affiseBaseUrl !== '') {
+                $amount = isset($deposit['amount']) ? (float)$deposit['amount'] : 0.0;
+                $affise_ftd_postback = [
+                    'clickid' => $lead['affise_clickid'],
+                    'action_id' => $ftdActionId,
+                    'sum' => $amount,
+                    'status' => '1',
+                ];
+                $affise_ftd_url = $affiseBaseUrl . '?' . http_build_query($affise_ftd_postback);
+                error_log('Affise FTD postback: ' . $affise_ftd_url);
+                tradeease_http_get($affise_ftd_url, 10);
+            }
+            continue;
+        }
+
+        $lead_date = isset($lead['date']) ? strtotime((string)$lead['date']) : time();
+        if ($lead_date > strtotime('-30 days')) {
+            $updated_leads[] = $lead;
+        }
+    }
+
+    $results['remaining'] = count($updated_leads);
+    tradeease_write_leads($storagePath, $updated_leads);
+    error_log('FTD check completed - Found ' . $results['ftd_found'] . ' FTDs');
+
+    return $results;
 }
 
 function tradeease_http_post(string $url, array $payload, int $timeout = 30): array
